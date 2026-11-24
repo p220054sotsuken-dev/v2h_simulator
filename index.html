@@ -1821,10 +1821,8 @@
                     } catch (_) {
                         text = new TextDecoder('shift_jis').decode(buffer);
                     }
-                    text = text.replace(/^﻿/, '');
-                    const lines = text.split(/
-?
-/);
+                    text = text.replace(/^﻿\uFEFF/, '');
+                    const lines = text.split(/?/);
                     const parsed = [];
 
                     let tempCol = 1, snowCol = 4, sunCol = 8, radCol = -1;
