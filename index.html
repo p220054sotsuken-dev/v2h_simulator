@@ -549,16 +549,6 @@
                             </select>
                         </div>
 
-                        <!-- Summer Fallback / Sample Info -->
-                        <div id="eco-summer-sample-wrap" class="hidden mb-2">
-                            <button id="eco-btn-summer-builtin" type="button" class="w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-300">
-                                ☀️ 内蔵 釧路夏期代表モデル (サンプル) に切替
-                            </button>
-                            <p id="eco-summer-note" class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2 leading-relaxed">
-                                ※夏期実測JSONが登録されている都市（釧路 2020〜2025年等）は自動で実測データを読み込みます。未収録の都市を選択した場合は、内蔵の釧路夏期代表モデルまたは下のCSV読込をご利用いただけます。
-                            </p>
-                        </div>
-
                         <p id="eco-data-status" class="text-xs text-emerald-700 font-medium mt-1.5">
                             読込中...
                         </p>
@@ -2213,7 +2203,6 @@
                     btnS.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white";
                     kpiBar.className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-sky-500 to-blue-600";
 
-                    document.getElementById('eco-summer-sample-wrap').classList.add('hidden');
                     document.getElementById('eco-snow-depth-wrap').classList.remove('hidden');
                     document.getElementById('eco-hvac-section-title').innerText = "建物・暖房設定（冬期：ISO 13790 RC回路）";
                     document.getElementById('eco-target-temp-label').innerText = "暖房目標室温 (℃)";
@@ -2230,7 +2219,6 @@
                     btnW.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white";
                     kpiBar.className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 to-orange-600";
 
-                    document.getElementById('eco-summer-sample-wrap').classList.remove('hidden');
                     document.getElementById('eco-snow-depth-wrap').classList.add('hidden');
                     document.getElementById('eco-hvac-section-title').innerText = "建物・冷房設定（夏期：ISO 13790 RC回路）";
                     document.getElementById('eco-target-temp-label').innerText = "冷房目標室温 (℃)";
@@ -3382,13 +3370,6 @@
                     selectedYear = e.target.value;
                     forceSummerSample = false;
                     customWeatherBySeason[season] = null;
-                    document.getElementById('eco-csv-input').value = '';
-                    const ok = await loadWeatherForCurrentSeason();
-                    if (ok) runEconomySimulation();
-                });
-                document.getElementById('eco-btn-summer-builtin').addEventListener('click', async () => {
-                    forceSummerSample = !forceSummerSample;
-                    customWeatherBySeason.summer = null;
                     document.getElementById('eco-csv-input').value = '';
                     const ok = await loadWeatherForCurrentSeason();
                     if (ok) runEconomySimulation();
