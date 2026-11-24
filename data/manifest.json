@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24 18:17",
+  "generatedAt": "2026-11-24 18:21",
   "cities": [
     {
       "id": "kushiro",
@@ -144,6 +144,14 @@
       "2020"
     ],
     "files": {
+      "kushiro": {
+        "2020": { "path": "data/summer/kushiro_2020.json" },
+        "2021": { "path": "data/summer/kushiro_2021.json" },
+        "2022": { "path": "data/summer/kushiro_2022.json" },
+        "2023": { "path": "data/summer/kushiro_2023.json" },
+        "2024": { "path": "data/summer/kushiro_2024.json" },
+        "2025": { "path": "data/summer/kushiro_2025.json" }
+      },
       "sapporo": {
         "2020": {
           "path": "data/summer/sapporo_2020.json",
