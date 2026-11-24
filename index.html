@@ -1,0 +1,3224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北海道8都市 V2H 統合シミュレータ（サバイバル ＆ 経済性）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+        }
+        input[type=range] {
+            accent-color: #2563eb;
+        }
+        .season-summer input[type=range] {
+            accent-color: #ea580c;
+        }
+        .view-section {
+            display: none;
+        }
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.25s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mode-card {
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        }
+        .mode-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -12px rgba(15, 23, 42, 0.14);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- =========================================================
+         共通グローバル・ナビゲーションバー
+    ========================================================= -->
+    <nav class="bg-slate-900 text-white shadow-md sticky top-0 z-50 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-3">
+            <button type="button" onclick="AppRouter.navigate('home')" class="flex items-center gap-2.5 text-left group focus:outline-none">
+                <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition">⚡</span>
+                <div>
+                    <div class="text-sm md:text-base font-bold tracking-tight leading-tight">北海道8都市 V2H 統合シミュレーション</div>
+                    <div class="text-[11px] text-slate-400 hidden sm:block">Hokkaido 8-City Cold-Climate V2H Research Suite (2020–2025)</div>
+                </div>
+            </button>
+
+            <div class="flex items-center gap-1.5 md:gap-2">
+                <button id="nav-btn-home" type="button" onclick="AppRouter.navigate('home')"
+                    class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition bg-blue-600 text-white">
+                    🏠 トップ
+                </button>
+                <button id="nav-btn-survival" type="button" onclick="AppRouter.navigate('survival')"
+                    class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    ❄️ サバイバル
+                </button>
+                <button id="nav-btn-economy" type="button" onclick="AppRouter.navigate('economy')"
+                    class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    💰 経済シミュレーション
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================================================
+         VIEW 1: トップページ（1ページ目：モード選択セクション）
+    ========================================================= -->
+    <section id="view-home" class="view-section active flex-1">
+        <!-- Hero Banner -->
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-white py-14 md:py-20 px-4 md:px-6 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-15 pointer-events-none"
+                 style="background-image: radial-gradient(#60a5fa 1px, transparent 1px); background-size: 26px 26px;"></div>
+            <div class="max-w-5xl mx-auto text-center relative z-10">
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3.5 py-1 rounded-full mb-5">
+                    🎓 北海道8都市 V2H 物理＆経済連成解析プラットフォーム
+                </span>
+                <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight mb-4">
+                    シミュレーションを選択してください
+                </h1>
+                <p class="text-sm md:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                    厳冬期の長期停電を検証する<strong class="text-white">「ブラックアウト・サバイバル」</strong>と、
+                    冬期・夏期の電気代削減効果を評価する<strong class="text-white">「V2H経済性シミュレーション」</strong>を1つのWebアプリに統合しました。
+                </p>
+            </div>
+        </div>
+
+        <!-- Mode Selection Cards -->
+        <div class="max-w-6xl mx-auto px-4 md:px-6 -mt-8 pb-16 relative z-20">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+
+                <!-- Card 1: Survival Simulator -->
+                <div class="mode-card bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="h-2.5 bg-gradient-to-r from-blue-600 via-cyan-500 to-emerald-500"></div>
+                    <div class="p-7 md:p-8 flex-1 flex flex-col">
+                        <div class="flex items-center justify-between gap-2 mb-4">
+                            <span class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-3xl">❄️</span>
+                            <span class="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">北海道8都市 × 6年分 軽量分割版</span>
+                        </div>
+                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-2">
+                            災害時ブラックアウト・サバイバル シミュレータ
+                        </h2>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                            真冬の北海道主要8都市（釧路・札幌・旭川・帯広・稚内・網走・苫小牧・函館）で大規模停電が発生した際、EVバッテリーと太陽光発電だけで「LDK（13㎡）の室温が限界0℃に達するまで何日・何時間生存できるか」を精密にシミュレーション・地域比較します。
+                        </p>
+
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6 space-y-2 text-xs text-slate-700">
+                            <div class="flex items-start gap-2">
+                                <span class="text-blue-600 font-bold">✓</span>
+                                <span><strong>道内8都市 × 2020〜2025年冬（全48シーズン）実測気象データ</strong>をオンデマンド読込（初回通信わずか数10KB・スマホ高速表示）</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-blue-600 font-bold">✓</span>
+                                <span>RC連続指数積分・外気温連動COP・アレニウス低温劣化・窓パッシブ日射熱連成</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-blue-600 font-bold">✓</span>
+                                <span>EV容量・初期SOC・停電発生日・太陽光容量・換気回数等をリアルタイム調整可能</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto">
+                            <button type="button" onclick="AppRouter.navigate('survival')"
+                                class="w-full py-3.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm md:text-base shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2">
+                                <span>サバイバルシミュレータを開始する</span>
+                                <span>→</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Economy Simulator -->
+                <div class="mode-card bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="h-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500"></div>
+                    <div class="p-7 md:p-8 flex-1 flex flex-col">
+                        <div class="flex items-center justify-between gap-2 mb-4">
+                            <span class="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-3xl">💰</span>
+                            <span class="text-xs font-bold bg-orange-100 text-orange-800 px-3 py-1 rounded-full">冬期(DF02) / 夏期(JA01) 切替</span>
+                        </div>
+                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-2">
+                            V2H 経済性シミュレーション
+                        </h2>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                            時間帯別固定料金（夜間22円・昼間35円・夕方42円・売電8円）におけるV2H導入の3ヶ月間電気代削減効果を算出。画面内で<strong>冬期暖房仕様</strong>と<strong>夏期冷房仕様</strong>を自在に切り替えられます。
+                        </p>
+
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6 space-y-2 text-xs text-slate-700">
+                            <div class="flex items-start gap-2">
+                                <span class="text-orange-600 font-bold">✓</span>
+                                <span><strong>冬期（12〜2月・暖房＋積雪）</strong>と<strong>夏期（6〜8月・冷房）</strong>のアルゴリズムを完全移植</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-orange-600 font-bold">✓</span>
+                                <span>往復効率(η²)に基づく放電損益分岐制御・PV余剰追跡・期末SOC清算・物理自己診断付き</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-orange-600 font-bold">✓</span>
+                                <span>5グラフ統合ダッシュボード＆時間帯別収支表を再現（手元の気象庁CSV読込にも対応）</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto space-y-2.5">
+                            <button type="button" onclick="AppRouter.navigate('economy', 'winter')"
+                                class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-[0.99] text-white font-bold text-sm md:text-base shadow-md shadow-orange-500/20 transition flex items-center justify-center gap-2">
+                                <span>経済シミュレーションを開始する</span>
+                                <span>→</span>
+                            </button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" onclick="AppRouter.navigate('economy', 'winter')"
+                                    class="py-2 px-3 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-bold transition">
+                                    ❄️ 冬期モードで開く
+                                </button>
+                                <button type="button" onclick="AppRouter.navigate('economy', 'summer')"
+                                    class="py-2 px-3 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition">
+                                    ☀️ 夏期モードで開く
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Specs Note -->
+            <div class="mt-10 bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 mb-3">🔬 搭載モデル一覧とデータソース</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600 leading-relaxed">
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="font-bold text-slate-800 mb-1">1. サバイバルモデル (index05)</div>
+                        LDK 13㎡・目標室温12℃・初期室温20℃。RC連続サブステップ積分、都市別緯度経度・実測日射量連成、北海道8都市×2020〜2025年冬（48データセット）＆8都市一括比較内蔵。
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="font-bold text-slate-800 mb-1">2. 経済性・冬期モデル (DF02)</div>
+                        住宅全体(外皮280㎡・UA0.46)・暖房目標20℃・パネル積雪滑落・夜間充電(平日95%/休日75%)・寒冷地損益分岐放電制御。
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="font-bold text-slate-800 mb-1">3. 経済性・夏期モデル (JA01)</div>
+                        住宅全体・冷房目標26℃・夏期COP(基準4.0)・夜間充電(平日75%/休日55%)でPV余剰受入を最大化。釧路夏期モデルデータ内蔵＋CSV対応。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         VIEW 2: サバイバルシミュレータ（index05.html 完全移植）
+    ========================================================= -->
+    <section id="view-survival" class="view-section flex-1">
+        <!-- Header -->
+        <header class="bg-slate-800 text-white shadow-sm py-4 px-6 mb-6">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight">
+                        🎓 北海道8都市 V2H 災害時ブラックアウト・サバイバル シミュレータ
+                    </h1>
+                    <p class="text-xs text-slate-300 mt-0.5">道内8都市 × 2020〜2025年冬（全48シーズン）気象庁実測データ・軽量オンデマンド読込版</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs md:text-sm bg-blue-600 px-3 py-1 rounded-full font-semibold">8都市 × 6年 比較対応</span>
+                    <button type="button" onclick="AppRouter.navigate('home')" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg font-semibold transition">
+                        ← 選択画面へ
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-12">
+            
+            <!-- Left Column: Controls -->
+            <div class="lg:col-span-1 space-y-5">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    
+                    <!-- Dataset Selector -->
+                    <div class="mb-5 pb-4 border-b border-slate-200 space-y-3">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-800 mb-2">🗺️ 地域（道内8都市）を選択</label>
+                            <div id="cityBtnGrid" class="grid grid-cols-4 gap-1.5">
+                                <button type="button" data-city="kushiro" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm">釧路</button>
+                                <button type="button" data-city="sapporo" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">札幌</button>
+                                <button type="button" data-city="asahikawa" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">旭川</button>
+                                <button type="button" data-city="obihiro" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">帯広</button>
+                                <button type="button" data-city="wakkanai" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">稚内</button>
+                                <button type="button" data-city="abashiri" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">網走</button>
+                                <button type="button" data-city="tomakomai" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">苫小牧</button>
+                                <button type="button" data-city="hakodate" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">函館</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-800 mb-2">📅 年度（冬期シーズン）を切り替え</label>
+                            <div id="yearBtnGrid" class="grid grid-cols-3 gap-1.5">
+                                <button type="button" data-year="2025" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm">2025年冬</button>
+                                <button type="button" data-year="2024" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2024年冬</button>
+                                <button type="button" data-year="2023" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2023年冬</button>
+                                <button type="button" data-year="2022" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2022年冬</button>
+                                <button type="button" data-year="2021" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2021年冬</button>
+                                <button type="button" data-year="2020" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2020年冬</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 space-y-1">
+                            <p id="dataStatus" class="text-xs text-emerald-800 font-bold leading-snug">
+                                現在: 釧路 2025年冬
+                            </p>
+                            <p id="dataStatsSub" class="text-[11px] text-emerald-700 leading-snug">
+                                読込中...
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-4 border-b pb-2">
+                        <h2 class="text-base font-bold">シミュレーション条件設定</h2>
+                        <button id="resetBtn" type="button" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded font-medium transition">
+                            new08_2初期値に戻す
+                        </button>
+                    </div>
+                    
+                    <!-- Input 1: EV Capacity -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <label for="evInput" class="text-sm font-semibold text-slate-700">EVバッテリー容量 (kWh)</label>
+                            <span id="evVal" class="text-sm font-bold text-blue-600">40 kWh</span>
+                        </div>
+                        <input type="range" id="evInput" min="10" max="100" step="5" value="40" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-slate-500 mt-1">※参考: 軽EV=20kWh, リーフ=40/60kWh</p>
+                    </div>
+
+                    <!-- Input 2: Initial SOC -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <label for="socInput" class="text-sm font-semibold text-slate-700">停電発生時の充電残量 (SOC)</label>
+                            <span id="socVal" class="text-sm font-bold text-blue-600">80 %</span>
+                        </div>
+                        <input type="range" id="socInput" min="10" max="100" step="5" value="80" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Input 3: V2H Dead Line -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <label for="limitInput" class="text-sm font-semibold text-slate-700">V2H システム停止下限 (%)</label>
+                            <span id="limitVal" class="text-sm font-bold text-blue-600">10 %</span>
+                        </div>
+                        <input type="range" id="limitInput" min="5" max="30" step="5" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <p id="limitNote" class="text-xs text-slate-500 mt-1">※new08_2基準: 10% (4.0kWh)</p>
+                    </div>
+
+                    <!-- Input 4: COP -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <label for="copInput" class="text-sm font-semibold text-slate-700">暖房の成績係数 (COP)</label>
+                            <span id="copVal" class="text-sm font-bold text-blue-600">2.0</span>
+                        </div>
+                        <input type="range" id="copInput" min="1.0" max="4.0" step="0.5" value="2.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-slate-500 mt-1">※電気ストーブ=1.0, 寒冷地エアコン=2.0〜</p>
+                    </div>
+
+                    <!-- Input 5: PV Capacity -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <label for="pvInput" class="text-sm font-semibold text-slate-700">太陽光パネル容量 (kW)</label>
+                            <span id="pvVal" class="text-sm font-bold text-blue-600">5.0 kW</span>
+                        </div>
+                        <input type="range" id="pvInput" min="0" max="10" step="0.5" value="5.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Input 6: Ventilation Rate -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <label for="ventInput" class="text-sm font-semibold text-slate-700">換気回数 (回/h)</label>
+                            <span id="ventVal" class="text-sm font-bold text-blue-600">0.20 回/h</span>
+                        </div>
+                        <input type="range" id="ventInput" min="0.1" max="0.6" step="0.05" value="0.20" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-slate-500 mt-1">※new08_2基準: 0.2回 (停電時隙間風) / 通常換気: 0.5回</p>
+                    </div>
+
+                    <!-- Start Date Selector -->
+                    <div class="mb-4 pt-3 border-t border-slate-200">
+                        <label for="startDaySelect" class="block text-xs font-bold text-slate-700 mb-1">⚡ 停電発生日（シミュレーション開始日時）</label>
+                        <select id="startDaySelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
+                            <option value="0">12月01日 00:00（初冬・全90日間基準）</option>
+                            <option value="19">12月20日 00:00（冬至・歳末寒波期）</option>
+                            <option value="31">01月01日 00:00（元日・厳冬期）</option>
+                            <option value="45">01月15日 00:00（1月中旬・厳冬ピーク期）</option>
+                            <option value="55">01月25日 00:00（1月下旬・最強寒波 -15℃期）</option>
+                            <option value="62">02月01日 00:00（2月上旬・厳冬降雪期）</option>
+                        </select>
+                    </div>
+
+                    <!-- Passive Solar Gain Selector -->
+                    <div class="mb-4">
+                        <label for="passiveSolarSelect" class="block text-xs font-bold text-slate-700 mb-1">🪟 窓からの日射熱取得（パッシブソーラー）</label>
+                        <select id="passiveSolarSelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
+                            <option value="0.35">標準：南向きLow-E窓（実効日射面積 0.35㎡）</option>
+                            <option value="0.60">大開口：日射取得重視（実効日射面積 0.60㎡）</option>
+                            <option value="0.00">なし：カーテン・断熱雨戸閉鎖（0.00㎡）</option>
+                        </select>
+                    </div>
+
+                    <!-- Plot Range Selector -->
+                    <div class="mb-4 pt-3 border-t border-slate-200">
+                        <label for="plotRangeSelect" class="block text-xs font-bold text-slate-700 mb-1">📈 グラフ描画期間</label>
+                        <select id="plotRangeSelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
+                            <option value="auto">Python版準拠（限界到達+48h / 最大30日間）</option>
+                            <option value="full">全期間を表示（開始日〜2月末日）</option>
+                        </select>
+                    </div>
+
+                    <!-- CSV File Loader (Optional) -->
+                    <div class="mt-4 pt-3 border-t border-slate-200">
+                        <label for="csvFileInput" class="block text-xs font-bold text-slate-700 mb-1">📂 さらに別の気象庁CSVを追加読み込み（任意・列自動検出）</label>
+                        <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    </div>
+                    
+                    <div class="bg-blue-50 rounded-lg p-4 mt-4 border border-blue-100">
+                        <p class="text-xs text-blue-800 leading-relaxed">
+                            <strong>固定物理パラメータ (現実物理補正版):</strong><br>
+                            ・対象部屋: LDK 13㎡ (外皮45㎡ + 非暖房室境界 24W/K)<br>
+                            ・室温維持目標: 12.0℃ (初期室温 20.0℃)<br>
+                            ・熱容量 C_th: 0.397 kWh/K / 実効待機電力: 0.18 kW<br>
+                            ・パネル傾斜角: 40° / 窓パッシブ日射熱取得 連成対応<br>
+                            ・低温特性: アレニウス式 (6000 J/mol) + 外気温連動COP<br><span id="survivalCoordSpec">・適用座標: 北緯42.99° / 東経144.38° (釧路)</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & 2-Stage Charts -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Summary Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 text-center flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-emerald-500"></div>
+                    <h3 class="text-slate-500 font-semibold mb-2">連続生存時間（限界室温 0℃ 到達まで）</h3>
+                    <div class="flex flex-wrap items-baseline justify-center gap-x-2">
+                        <span id="survivalTotalHours" class="text-5xl md:text-6xl font-black text-slate-800 tracking-tight">--</span>
+                        <span class="text-xl font-bold text-slate-600">時間</span>
+                        <span class="text-lg font-semibold text-slate-400 ml-2">（</span>
+                        <span id="survivalDays" class="text-2xl font-bold text-blue-600">--</span>
+                        <span class="text-base font-bold text-slate-500">日 と</span>
+                        <span id="survivalHours" class="text-2xl font-bold text-blue-600">--</span>
+                        <span class="text-base font-bold text-slate-500">時間</span>
+                        <span class="text-lg font-semibold text-slate-400">）</span>
+                    </div>
+                    <div class="mt-3 flex flex-wrap justify-center gap-2 text-xs md:text-sm">
+                        <span id="batDeadTimeEl" class="px-3 py-1 bg-slate-100 text-slate-700 rounded-md font-medium">バッテリー停止: --</span>
+                        <span id="roomDeadTimeEl" class="px-3 py-1 bg-red-50 text-red-700 rounded-md font-semibold">限界室温(0℃)到達: --</span>
+                        <span id="minBatEl" class="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-md font-medium">最低バッテリー残量: --</span>
+                    </div>
+                    <p id="resultMessage" class="mt-3 text-sm font-medium px-4 py-1.5 bg-orange-50 text-orange-700 rounded-full inline-block mx-auto">
+                        計算中...
+                    </p>
+                </div>
+
+                <!-- Upper Chart: EV Battery & Temperature -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <h3 class="text-base md:text-lg font-bold mb-3 text-slate-700">【上段】EVバッテリー残量と温度推移</h3>
+                    <div class="relative h-72 w-full">
+                        <canvas id="upperChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Lower Chart: Power Balance -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <h3 class="text-base md:text-lg font-bold mb-3 text-slate-700">【下段】電力バランス（消費電力と太陽光発電）</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="lowerChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 8-City Batch Comparison Card (On-Demand Fetch) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div>
+                            <h3 class="text-base md:text-lg font-bold text-slate-800">🗺️ 同一条件での北海道8都市 一括サバイバル比較</h3>
+                            <p id="compareSubtitle" class="text-xs text-slate-500 mt-0.5">ボタンを押すと同年度の全8都市データを並列取得して横並び比較します（取得後はスライダー連動）</p>
+                        </div>
+                        <button id="runBatchCompareBtn" type="button"
+                            class="px-3.5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition whitespace-nowrap">
+                            ⚡ 全8都市を一括比較する
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs md:text-sm text-right border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                                    <th class="py-2 px-2.5 text-left font-bold">都市</th>
+                                    <th class="py-2 px-2.5 font-bold">生存時間</th>
+                                    <th class="py-2 px-2.5 font-bold">最低残量</th>
+                                    <th class="py-2 px-2.5 font-bold">平均/最低気温</th>
+                                    <th class="py-2 px-2.5 font-bold">期間降雪</th>
+                                    <th class="py-2 px-2.5 text-center font-bold">日射</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cityCompareTbody" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="6" class="py-6 text-center text-xs text-slate-400">
+                                        初期通信を抑えるため、現在選択中の都市のみ読み込んでいます。右上の「⚡ 全8都市を一括比較する」を押すと全8都市を同時計算します。
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </section>
+
+    <!-- =========================================================
+         VIEW 3: V2H経済性シミュレーション（冬期 DF02 / 夏期 JA01 切替）
+    ========================================================= -->
+    <section id="view-economy" class="view-section flex-1">
+        <!-- Economy Header with Season Switcher -->
+        <header id="eco-header" class="bg-gradient-to-r from-slate-800 via-sky-900 to-slate-800 text-white shadow-sm py-4 px-6 mb-6 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight">
+                            💰 釧路V2H 経済性シミュレーション
+                        </h1>
+                        <span id="eco-season-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-500 text-white">
+                            ❄️ 冬期モデル (DF02)
+                        </span>
+                    </div>
+                    <p id="eco-header-sub" class="text-xs text-slate-300 mt-0.5">
+                        寒冷地最適化制御（時間帯別固定料金・損益分岐放電・積雪＆暖房モデル・物理自己診断付き）
+                    </p>
+                </div>
+
+                <!-- Prominent Winter / Summer Toggle -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="inline-flex bg-slate-900/70 p-1 rounded-xl border border-white/15">
+                        <button id="eco-btn-winter" type="button"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition bg-sky-500 text-white shadow">
+                            ❄️ 冬期用 (12〜2月・DF02)
+                        </button>
+                        <button id="eco-btn-summer" type="button"
+                            class="px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white">
+                            ☀️ 夏期用 (6〜8月・JA01)
+                        </button>
+                    </div>
+                    <button type="button" onclick="AppRouter.navigate('home')" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-semibold transition">
+                        ← 選択画面へ
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-6 pb-14">
+
+            <!-- Left Sidebar: Controls (4 cols) -->
+            <div class="lg:col-span-4 space-y-5">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6">
+
+                    <!-- Weather Data Source Card -->
+                    <div class="mb-5 pb-4 border-b border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-bold text-slate-800">📅 気象データソース</label>
+                            <span id="eco-data-badge" class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">実測データ</span>
+                        </div>
+
+                        <!-- Winter Built-in City & Year Selectors -->
+                        <div id="eco-winter-year-wrap" class="grid grid-cols-2 gap-2 mb-2">
+                            <select id="eco-winter-city" class="text-xs font-bold border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50 text-slate-800">
+                                <option value="kushiro">釧路</option>
+                                <option value="sapporo">札幌</option>
+                                <option value="asahikawa">旭川</option>
+                                <option value="obihiro">帯広</option>
+                                <option value="wakkanai">稚内</option>
+                                <option value="abashiri">網走</option>
+                                <option value="tomakomai">苫小牧</option>
+                                <option value="hakodate">函館</option>
+                            </select>
+                            <select id="eco-winter-year" class="text-xs font-bold border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50 text-slate-800">
+                                <option value="2025">2025年冬 (実測)</option>
+                                <option value="2024">2024年冬 (実測)</option>
+                                <option value="2023">2023年冬 (実測)</option>
+                                <option value="2022">2022年冬 (実測)</option>
+                                <option value="2021">2021年冬 (実測)</option>
+                                <option value="2020">2020年冬 (実測)</option>
+                            </select>
+                        </div>
+
+                        <!-- Summer Built-in Info / Button -->
+                        <div id="eco-summer-sample-wrap" class="hidden mb-2">
+                            <button id="eco-btn-summer-builtin" type="button" class="w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-orange-500 text-white border-orange-500 shadow-sm">
+                                ☀️ 内蔵 釧路夏期代表モデル (6〜8月 2208時間) を使用
+                            </button>
+                            <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2 leading-relaxed">
+                                ※夏期実測CSVは未添付のため、釧路の夏期気候（海霧・冷涼・真夏日）を再現した代表モデルを内蔵しています。下のファイル選択からお手元の <code class="font-mono bg-amber-100 px-1 rounded">kushiro wheather summer.csv</code> を読み込むと実測データで即時再計算できます。
+                            </p>
+                        </div>
+
+                        <p id="eco-data-status" class="text-xs text-emerald-700 font-medium mt-1.5">
+                            読込中...
+                        </p>
+                        <p id="eco-data-warn" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2"></p>
+
+                        <!-- CSV File Uploader -->
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <label for="eco-csv-input" class="block text-xs font-bold text-slate-700 mb-1">
+                                📂 気象庁CSVファイルを読み込む（Shift_JIS/UTF-8・24:00対応）
+                            </label>
+                            <input type="file" id="eco-csv-input" accept=".csv"
+                                class="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                            <label id="eco-snow-depth-wrap" class="mt-2 flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                                <input type="checkbox" id="eco-snow-is-depth" class="rounded border-slate-300 text-blue-600">
+                                <span>CSVの積雪列を「積雪深(累計)」として差分計算する（DF02仕様）</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Parameter Header -->
+                    <div class="flex items-center justify-between mb-4 border-b pb-2">
+                        <h2 class="text-base font-bold">⚙️ シミュレーション条件</h2>
+                        <button id="eco-reset-btn" type="button" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded font-semibold transition">
+                            季節デフォルトに戻す
+                        </button>
+                    </div>
+
+                    <!-- Group 1: Tariff -->
+                    <div class="mb-4 pb-3 border-b border-slate-100">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">時間帯別固定料金（円/kWh）</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="eco-price-night" class="block text-xs font-semibold text-slate-700 mb-1">夜間 (22-8時)</label>
+                                <input type="number" id="eco-price-night" value="22" step="1" min="1" max="100"
+                                    class="w-full text-sm font-bold border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50">
+                            </div>
+                            <div>
+                                <label for="eco-price-day" class="block text-xs font-semibold text-slate-700 mb-1">昼間 (8-16時)</label>
+                                <input type="number" id="eco-price-day" value="35" step="1" min="1" max="100"
+                                    class="w-full text-sm font-bold border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50">
+                            </div>
+                            <div>
+                                <label for="eco-price-peak" class="block text-xs font-semibold text-slate-700 mb-1">夕方ピーク (16-22時)</label>
+                                <input type="number" id="eco-price-peak" value="42" step="1" min="1" max="120"
+                                    class="w-full text-sm font-bold border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50">
+                            </div>
+                            <div>
+                                <label for="eco-price-sell" class="block text-xs font-semibold text-slate-700 mb-1">売電単価 (卒FIT)</label>
+                                <input type="number" id="eco-price-sell" value="8" step="1" min="0" max="50"
+                                    class="w-full text-sm font-bold border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group 2: PV & EV -->
+                    <div class="mb-4 pb-3 border-b border-slate-100 space-y-3.5">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">太陽光・EV・V2H仕様</div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label for="eco-pv-cap" class="text-xs font-semibold text-slate-700">太陽光パネル容量 (kW)</label>
+                                <span id="eco-pv-cap-val" class="text-xs font-bold text-blue-600">5.0 kW</span>
+                            </div>
+                            <input type="range" id="eco-pv-cap" min="0" max="12" step="0.5" value="5.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label for="eco-batt-max" class="text-xs font-semibold text-slate-700">EVバッテリー定格容量 (kWh)</label>
+                                <span id="eco-batt-max-val" class="text-xs font-bold text-blue-600">60 kWh</span>
+                            </div>
+                            <input type="range" id="eco-batt-max" min="20" max="100" step="5" value="60" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label for="eco-min-res" class="text-xs font-semibold text-slate-700">備蓄・劣化防止下限残量 (kWh)</label>
+                                <span id="eco-min-res-val" class="text-xs font-bold text-blue-600">15 kWh</span>
+                            </div>
+                            <input type="range" id="eco-min-res" min="5" max="35" step="1" value="15" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label for="eco-night-wkday" class="text-xs font-semibold text-slate-700">夜間目標(平日)</label>
+                                    <span id="eco-night-wkday-val" class="text-xs font-bold text-blue-600">95%</span>
+                                </div>
+                                <input type="range" id="eco-night-wkday" min="40" max="100" step="5" value="95" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label for="eco-night-wkend" class="text-xs font-semibold text-slate-700">夜間目標(休日)</label>
+                                    <span id="eco-night-wkend-val" class="text-xs font-bold text-blue-600">75%</span>
+                                </div>
+                                <input type="range" id="eco-night-wkend" min="40" max="100" step="5" value="75" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div class="pt-1 flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                            <label for="eco-use-breakeven" class="text-xs font-bold text-slate-700 cursor-pointer">
+                                損益分岐点放電制御 (22円÷η² + 1円)
+                            </label>
+                            <input type="checkbox" id="eco-use-breakeven" checked class="w-4 h-4 rounded text-blue-600 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- Group 3: Building / HVAC (Season Dependent) -->
+                    <div class="space-y-3.5">
+                        <div id="eco-hvac-section-title" class="text-xs font-bold text-slate-500 uppercase tracking-wider">建物・暖房設定（冬期）</div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label id="eco-target-temp-label" for="eco-target-temp" class="text-xs font-semibold text-slate-700">目標室温 (℃)</label>
+                                <span id="eco-target-temp-val" class="text-xs font-bold text-blue-600">20.0 ℃</span>
+                            </div>
+                            <input type="range" id="eco-target-temp" min="16" max="30" step="0.5" value="20.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label id="eco-base-cop-label" for="eco-base-cop" class="text-xs font-semibold text-slate-700">基準暖房COP</label>
+                                <span id="eco-base-cop-val" class="text-xs font-bold text-blue-600">3.0</span>
+                            </div>
+                            <input type="range" id="eco-base-cop" min="1.5" max="6.0" step="0.1" value="3.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 text-[11px] text-slate-600 leading-relaxed" id="eco-fixed-specs">
+                            <strong>固定物理仕様:</strong> UA=0.46 / 外皮280㎡ / 気積300㎥ / 換気0.5回/h / C_th=5.0 kWh/K / 初期SOC=45kWh / 充放電最大6kW / V2H待機0.04kW / 平日外出8-18時(10kWh)・休日11-15時(6kWh)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debug Self-Check Panel -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-800">🔍 デバッグ自己診断</h3>
+                        <span id="eco-debug-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">検証中...</span>
+                    </div>
+                    <div id="eco-debug-body" class="space-y-1.5 text-xs font-mono text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        計算中...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Area: KPI Summary, Breakdown, & 5-Chart Dashboard (8 cols) -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- Top KPI Banner -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 relative overflow-hidden">
+                    <div id="eco-kpi-bar" class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-sky-500 to-blue-600"></div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h2 id="eco-result-title" class="text-base md:text-lg font-extrabold text-slate-900">
+                                🏆 釧路V2H 経済性シミュレーション結果
+                            </h2>
+                            <p id="eco-period-info" class="text-xs text-slate-500 mt-0.5">対象期間: --</p>
+                        </div>
+                        <div id="eco-temp-stats" class="text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg">
+                            外気温: --
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500">V2Hなし（普通の家）</div>
+                            <div id="eco-kpi-base" class="text-xl md:text-2xl font-black text-slate-800 mt-1">-- 円</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">3ヶ月総電気代</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="text-[11px] font-semibold text-slate-500">V2Hあり（表面 / 補正後）</div>
+                            <div id="eco-kpi-v2h" class="text-xl md:text-2xl font-black text-slate-800 mt-1">-- 円</div>
+                            <div id="eco-kpi-v2h-sub" class="text-[11px] text-slate-500 mt-0.5">SOC清算: --</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                            <div class="text-[11px] font-bold text-emerald-800">✨ 実質節約金額 (SOC補正後)</div>
+                            <div id="eco-kpi-saving" class="text-xl md:text-2xl font-black text-emerald-700 mt-1">-- 円</div>
+                            <div id="eco-kpi-rate" class="text-xs font-bold text-emerald-600 mt-0.5">--% 削減</div>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200">
+                            <div class="text-[11px] font-bold text-amber-800">☀️ PV自家消費率</div>
+                            <div id="eco-kpi-selfcons" class="text-xl md:text-2xl font-black text-amber-700 mt-1">--%</div>
+                            <div id="eco-kpi-selfcons-sub" class="text-[11px] text-amber-700 mt-0.5">なし --% → あり --%</div>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Metrics Row -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 text-xs">
+                        <div class="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <span class="text-slate-500 block text-[11px]" id="eco-metric-hvac-label">暖房負荷 / 総需要</span>
+                            <strong id="eco-metric-hvac" class="text-slate-800">--</strong>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <span class="text-slate-500 block text-[11px]">PV余剰→EV充電</span>
+                            <strong id="eco-metric-pvchg" class="text-slate-800">--</strong>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <span class="text-slate-500 block text-[11px]">V2H放電 / 等価サイクル</span>
+                            <strong id="eco-metric-cycles" class="text-slate-800">--</strong>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <span class="text-slate-500 block text-[11px]">放電見送り / 平均片道効率</span>
+                            <strong id="eco-metric-skip" class="text-slate-800">--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1-Week Window Selector for Time-Series Charts -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-800">📅 時系列グラフ表示期間（1週間ウィンドウ）</span>
+                        <span id="eco-week-label" class="text-xs font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md">--</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-1 max-w-xs">
+                        <span class="text-xs text-slate-500 whitespace-nowrap">開始日:</span>
+                        <input type="range" id="eco-week-start" min="0" max="83" step="1" value="0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <button id="eco-week-reset" type="button" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold whitespace-nowrap">
+                            第1週
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Integrated 5-Chart Dashboard (Matching Python 2-column layout) -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    <!-- Left Column of Charts: Price, SOC/Temp, Cumulative Cost -->
+                    <div class="space-y-5">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">① 時間帯別電気料金と外気温依存の放電損益分岐単価（1週間）</h3>
+                            <div class="relative h-56 w-full"><canvas id="ecoChartPrice"></canvas></div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">② EVバッテリー運用と実効充電上限・外気温（1週間）</h3>
+                            <div class="relative h-60 w-full"><canvas id="ecoChartSoc"></canvas></div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">③ 累積電気代の比較（表示1週間）</h3>
+                            <div class="relative h-56 w-full"><canvas id="ecoChartCum"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column of Charts: 3-Month Cost Breakdown & 1-Week Energy Balance -->
+                    <div class="space-y-5 flex flex-col">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex-1">
+                            <h3 id="eco-breakdown-chart-title" class="text-sm font-bold text-slate-800 mb-2">④ 3ヶ月の時間帯別コスト内訳比較（全項目合算＝実質合計）</h3>
+                            <div class="relative h-80 w-full"><canvas id="ecoChartBreakdown"></canvas></div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex-1">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">⑤ 1週間のエネルギー収支（需要・PV・V2H充放電）</h3>
+                            <div class="relative h-80 w-full"><canvas id="ecoChartBalance"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 overflow-x-auto">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm md:text-base font-bold text-slate-800">📊 時間帯別 買電量・電気代の詳細内訳（3ヶ月累計）</h3>
+                        <span id="eco-standby-note" class="text-xs text-slate-500">待機電力ロス: --</span>
+                    </div>
+                    <table class="w-full text-xs md:text-sm text-right border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                                <th class="py-2.5 px-3 text-left font-bold">項目</th>
+                                <th class="py-2.5 px-3 font-bold">V2Hなし (kWh)</th>
+                                <th class="py-2.5 px-3 font-bold">V2Hなし (円)</th>
+                                <th class="py-2.5 px-3 font-bold">V2Hあり (kWh)</th>
+                                <th class="py-2.5 px-3 font-bold">V2Hあり (円)</th>
+                                <th class="py-2.5 px-3 font-bold">差額 (円)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eco-breakdown-tbody" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </section>
+
+    <!-- =========================================================
+         JAVASCRIPT: 共有データ ＋ ルーター ＋ サバイバル ＋ 経済シミュレーション
+    ========================================================= -->
+    <script>
+        // =========================================================
+        // 0. 共有内蔵気象データ（index05.html より 2024/2025年冬 実測2160時間×2 完全内蔵）
+        // =========================================================
+        // =========================================================
+        // 0. 軽量オンデマンド気象データストア (fetch + メモリキャッシュ)
+        // =========================================================
+        const WeatherStore = (() => {
+            let manifest = null;
+            let manifestPromise = null;
+            const cityMap = {};
+            const dataCache = {};
+            const pendingFetches = {};
+
+            function decodePayload(cityMeta, payload) {
+                const temps = payload.tempStr.split(",").map(Number);
+                const snows = payload.snowStr.split("").map(c => parseInt(c, 36));
+                const suns  = payload.sunStr.split("").map(c => parseInt(c, 36) / 10.0);
+                const hasRad = !!payload.hasRad && payload.radStr && payload.radStr.length >= temps.length * 2;
+                const radStr = payload.radStr || "";
+
+                const arr = new Array(temps.length);
+                const startMonthIdx = (payload.startMonth ? payload.startMonth : 12) - 1;
+                const startMs = Date.UTC(payload.startYear, startMonthIdx, 1, 0, 0, 0);
+                for (let i = 0; i < temps.length; i++) {
+                    const dt = new Date(startMs + i * 3600 * 1000);
+                    let radVal = NaN;
+                    let radMiss = true;
+                    if (hasRad) {
+                        const pair = radStr.slice(i * 2, i * 2 + 2);
+                        if (pair && pair !== "--") {
+                            const iv = parseInt(pair, 36);
+                            if (Number.isFinite(iv)) {
+                                radVal = iv / 100.0;
+                                radMiss = false;
+                            }
+                        }
+                    }
+                    arr[i] = {
+                        datetime: dt,
+                        temp: Number.isFinite(temps[i]) ? temps[i] : 0.0,
+                        snow: Number.isFinite(snows[i]) ? snows[i] : 0.0,
+                        sunshine: Number.isFinite(suns[i]) ? suns[i] : 0.0,
+                        solar_rad: radVal,
+                        solar_rad_is_missing: radMiss
+                    };
+                }
+
+                const endDt = arr[arr.length - 1].datetime;
+                const endY = endDt.getUTCFullYear();
+                const endM = String(endDt.getUTCMonth() + 1).padStart(2, '0');
+                const endD = String(endDt.getUTCDate()).padStart(2, '0');
+                const sLabel = (payload.season === "summer") ? "夏" : "冬";
+                const startM = String(startMonthIdx + 1).padStart(2, '0');
+
+                return {
+                    cityKey: cityMeta.id,
+                    yearKey: String(payload.startYear),
+                    season: payload.season || "winter",
+                    cityName: cityMeta.name,
+                    lat: cityMeta.lat,
+                    lon: cityMeta.lon,
+                    desc: cityMeta.desc,
+                    hasRad: hasRad,
+                    avgTemp: payload.avgTemp,
+                    minTemp: payload.minTemp,
+                    maxTemp: payload.maxTemp,
+                    totalSnow: payload.totalSnow,
+                    hours: payload.hours,
+                    label: `${cityMeta.name} ${payload.startYear}年${sLabel} (${payload.startYear}/${startM}/01〜${endY}/${endM}/${endD} 全${payload.hours}時間)`,
+                    data: arr
+                };
+            }
+
+            async function loadManifest() {
+                if (manifest) return manifest;
+                if (manifestPromise) return manifestPromise;
+                manifestPromise = (async () => {
+                    const resp = await fetch("./data/manifest.json", { cache: "no-cache" });
+                    if (!resp.ok) throw new Error(`manifest.json 取得失敗 (HTTP ${resp.status})`);
+                    manifest = await resp.json();
+                    (manifest.cities || []).forEach(c => { cityMap[c.id] = c; });
+                    return manifest;
+                })();
+                try {
+                    return await manifestPromise;
+                } catch (err) {
+                    manifestPromise = null;
+                    throw err;
+                }
+            }
+
+            async function loadDataset(season, cityKey, yearKey) {
+                const mf = await loadManifest();
+                const sBlock = mf[season];
+                if (!sBlock || !sBlock.files) throw new Error(`${season} データが manifest にありません`);
+
+                const cKey = sBlock.files[cityKey] ? cityKey : Object.keys(sBlock.files)[0];
+                const yKey = sBlock.files[cKey][String(yearKey)] ? String(yearKey) : Object.keys(sBlock.files[cKey]).sort().reverse()[0];
+                const cacheKey = `${season}_${cKey}_${yKey}`;
+
+                if (dataCache[cacheKey]) return dataCache[cacheKey];
+                if (pendingFetches[cacheKey]) return pendingFetches[cacheKey];
+
+                const entry = sBlock.files[cKey][yKey];
+                const cityMeta = cityMap[cKey] || { id: cKey, name: cKey, lat: 42.985, lon: 144.377, desc: "" };
+
+                pendingFetches[cacheKey] = (async () => {
+                    const resp = await fetch(`./${entry.path}`);
+                    if (!resp.ok) throw new Error(`${entry.path} 取得失敗 (HTTP ${resp.status})`);
+                    const payload = await resp.json();
+                    const decoded = decodePayload(cityMeta, payload);
+                    dataCache[cacheKey] = decoded;
+                    delete pendingFetches[cacheKey];
+                    return decoded;
+                })();
+
+                try {
+                    return await pendingFetches[cacheKey];
+                } catch (err) {
+                    delete pendingFetches[cacheKey];
+                    throw err;
+                }
+            }
+
+            async function loadAllCitiesForYear(season, yearKey) {
+                const mf = await loadManifest();
+                const sBlock = mf[season];
+                const yKey = String(yearKey);
+                const targets = (mf.cities || [])
+                    .map(c => c.id)
+                    .filter(cid => sBlock && sBlock.files && sBlock.files[cid] && sBlock.files[cid][yKey]);
+                return Promise.all(targets.map(cid => loadDataset(season, cid, yKey)));
+            }
+
+            function getCached(season, cityKey, yearKey) {
+                return dataCache[`${season}_${cityKey}_${yearKey}`] || null;
+            }
+
+            function getManifestSync() {
+                return manifest;
+            }
+
+            return { loadManifest, loadDataset, loadAllCitiesForYear, getCached, getManifestSync };
+        })();
+
+        // 釧路 夏期（6〜8月 全2208時間）代表気象モデルデータ生成（決定論的・再現性あり）
+        // ※実測CSV未読込時のデフォルトとして、釧路の冷涼な夏・海霧曇天・晴れ真夏日を忠実に模擬
+        function generateKushiroSummerSample() {
+            const arr = [];
+            const startMs = Date.UTC(2025, 5, 1, 0, 0, 0); // 2025-06-01 00:00
+            const totalHours = (30 + 31 + 31) * 24; // 92日 = 2208時間
+            // 決定論的疑似乱数 (Mulberry32)
+            let seed = 20250601;
+            function rand() {
+                seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+                let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            }
+
+            // 日ごとの天候パターン（釧路特有の海霧・曇天と晴天サイクル）
+            const totalDays = 92;
+            const daySky = new Array(totalDays);
+            const dayTempShift = new Array(totalDays);
+            let weatherState = 0.6;
+            let tempDrift = 0.0;
+            for (let d = 0; d < totalDays; d++) {
+                // 3〜5日周期の気圧配置・海霧変動
+                weatherState = Math.max(0.05, Math.min(0.98, weatherState * 0.55 + rand() * 0.45));
+                daySky[d] = weatherState;
+                tempDrift = Math.max(-3.5, Math.min(5.5, tempDrift * 0.65 + (rand() - 0.45) * 3.8));
+                dayTempShift[d] = tempDrift;
+            }
+
+            const lat = 42.98 * Math.PI / 180.0;
+            for (let i = 0; i < totalHours; i++) {
+                const dt = new Date(startMs + i * 3600 * 1000);
+                const dIdx = Math.floor(i / 24);
+                const h = dt.getUTCHours();
+                const doy = getDayOfYearUTC(dt);
+
+                // 季節平均気温トレンド（6月初旬11℃ → 8月中旬20.5℃ → 8月末18.5℃）
+                const seasonalMean = 11.2 + 9.2 * Math.sin(Math.PI * Math.min(1.0, (dIdx + 8) / 108.0));
+                const sky = daySky[dIdx];
+                // 晴天日ほど日較差が大きい（釧路は海風で日較差がやや穏やか、真夏日は27〜29℃到達）
+                const diurnalAmp = 2.4 + sky * 3.6;
+                const diurnal = -Math.cos((h - 4) * Math.PI / 12.0) * diurnalAmp;
+                const temp = Math.round((seasonalMean + dayTempShift[dIdx] + diurnal + (rand() - 0.5) * 0.6) * 10) / 10;
+
+                // 太陽高度から日照時間(0〜1h)と全天日射量(MJ/m²)を算出
+                const delta = (23.45 * Math.sin(((360.0 / 365.0) * (284 + doy)) * Math.PI / 180.0)) * Math.PI / 180.0;
+                const omega = ((h - 12.0) * 15.0) * Math.PI / 180.0;
+                const sin_h = Math.max(0.0, Math.sin(lat) * Math.sin(delta) + Math.cos(lat) * Math.cos(delta) * Math.cos(omega));
+
+                let sun = 0.0;
+                let solarRadMJ = 0.0;
+                if (sin_h > 0.03) {
+                    const cloudNoise = (rand() - 0.5) * 0.25;
+                    sun = Math.max(0.0, Math.min(1.0, Math.round((sky * 1.15 - 0.15 + cloudNoise) * 10) / 10));
+                    // 水平面全天日射量 (kWh/m² -> MJ/m²)
+                    const kwh_m2 = (1.367 * sin_h) * (0.22 + 0.52 * sun);
+                    solarRadMJ = Math.max(0.0, Math.round(kwh_m2 * 3.6 * 100) / 100);
+                }
+
+                arr.push({
+                    datetime: dt,
+                    temp: temp,
+                    snow: 0.0,
+                    sunshine: sun,
+                    solar_rad: solarRadMJ,
+                    solar_rad_is_missing: false
+                });
+            }
+            return {
+                label: "釧路 夏期代表モデル (2025/06/01〜2025/08/31 全2208時間・サンプル)",
+                data: arr
+            };
+        }
+
+        function getDayOfYearUTC(dt) {
+            const start = Date.UTC(dt.getUTCFullYear(), 0, 0);
+            return Math.floor((dt.getTime() - start) / (1000 * 60 * 60 * 24));
+        }
+
+        function parseJmaNumberCommon(str) {
+            if (str === undefined || str === null) return NaN;
+            const cleaned = String(str).replace(/[^\d.\-+]/g, '');
+            if (!cleaned || cleaned === '-' || cleaned === '+' || cleaned === '.') return NaN;
+            return parseFloat(cleaned);
+        }
+
+        // 気象庁CSVの「24:00」表記にも対応した日時パース
+        function parseJmaDateTimeUTC(dtStr) {
+            const s = String(dtStr).trim();
+            if (!/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/.test(s)) return { dt: null, is24h: false };
+            const is24h = /\s24:00(?::00)?$/.test(s);
+            const norm = is24h ? s.replace(/(\s)24(:00(?::00)?)$/, '$100$2') : s;
+            const parts = norm.split(/[\/\-\s:]/);
+            if (parts.length < 4) return { dt: null, is24h: false };
+            const baseMs = Date.UTC(
+                parseInt(parts[0], 10),
+                parseInt(parts[1], 10) - 1,
+                parseInt(parts[2], 10),
+                parseInt(parts[3], 10),
+                parts[4] ? parseInt(parts[4], 10) : 0
+            );
+            if (isNaN(baseMs)) return { dt: null, is24h: false };
+            const dt = new Date(baseMs + (is24h ? 24 * 3600 * 1000 : 0));
+            return { dt, is24h };
+        }
+
+        // =========================================================
+        // 1. アプリケーション・ルーター（画面切替管理）
+        // =========================================================
+        const AppRouter = (() => {
+            let currentView = 'home';
+            let survivalInited = false;
+            let economyInited = false;
+
+            function updateNavStyles(view) {
+                const views = ['home', 'survival', 'economy'];
+                views.forEach(v => {
+                    const sec = document.getElementById('view-' + v);
+                    const btn = document.getElementById('nav-btn-' + v);
+                    if (v === view) {
+                        sec.classList.add('active');
+                        btn.className = 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition bg-blue-600 text-white shadow-sm';
+                    } else {
+                        sec.classList.remove('active');
+                        btn.className = 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition text-slate-300 hover:bg-slate-800 hover:text-white';
+                    }
+                });
+            }
+
+            function navigate(view, option) {
+                currentView = view;
+                updateNavStyles(view);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+
+                if (view === 'survival') {
+                    if (!survivalInited) {
+                        SurvivalApp.init();
+                        survivalInited = true;
+                    } else {
+                        SurvivalApp.resizeCharts();
+                    }
+                } else if (view === 'economy') {
+                    if (!economyInited) {
+                        EconomyApp.init(option || 'winter');
+                        economyInited = true;
+                    } else {
+                        if (option === 'winter' || option === 'summer') {
+                            EconomyApp.setSeason(option);
+                        } else {
+                            EconomyApp.resizeCharts();
+                        }
+                    }
+                }
+            }
+
+            return { navigate };
+        })();
+
+        // =========================================================
+        // 2. サバイバルシミュレータ モジュール（index05.html 完全維持）
+        // =========================================================
+        const SurvivalApp = (() => {
+            let currentCityKey = "kushiro";
+            let currentYearKey = "2025";
+            let isCustomCsv = false;
+            let currentMeta = { cityName: "釧路", lat: 42.985, lon: 144.377, desc: "太平洋側・少雪多照", hasRad: false };
+            let weatherData = [];
+            let upperChartInstance = null;
+            let lowerChartInstance = null;
+            let loadSeq = 0;
+            const batchLoadedYears = new Set();
+
+            const survival_lifestyle_kW = [
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                1.0, 0.5,
+                0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                0.2, 0.2,
+                1.0, 1.0,
+                0.2, 0.2,
+                0.1, 0.1
+            ];
+
+            function formatDateTime(dt) {
+                const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+                const d = String(dt.getUTCDate()).padStart(2, '0');
+                const h = String(dt.getUTCHours()).padStart(2, '0');
+                return `${m}/${d} ${h}:00`;
+            }
+
+            function formatFullDateTime(dt) {
+                const y = dt.getUTCFullYear();
+                const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+                const d = String(dt.getUTCDate()).padStart(2, '0');
+                const h = String(dt.getUTCHours()).padStart(2, '0');
+                const min = String(dt.getUTCMinutes()).padStart(2, '0');
+                return `${y}-${m}-${d} ${h}:${min}`;
+            }
+
+            function calcArrheniusRatio(tempC) {
+                const T_kelvin = Math.max(200.0, tempC + 273.15);
+                return Math.max(0.5, Math.min(1.05, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15))));
+            }
+
+            function updateSelectorButtons() {
+                document.querySelectorAll('#cityBtnGrid .city-btn').forEach(btn => {
+                    const active = !isCustomCsv && btn.dataset.city === currentCityKey;
+                    btn.className = active
+                        ? "city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
+                });
+                document.querySelectorAll('#yearBtnGrid .year-btn').forEach(btn => {
+                    const active = !isCustomCsv && btn.dataset.year === currentYearKey;
+                    btn.className = active
+                        ? "year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
+                });
+            }
+
+            async function loadBuiltInDataset(cityKey, yearKey) {
+                currentCityKey = cityKey || currentCityKey;
+                currentYearKey = String(yearKey || currentYearKey);
+                isCustomCsv = false;
+                updateSelectorButtons();
+
+                const mySeq = ++loadSeq;
+                const statusEl = document.getElementById('dataStatus');
+                const statsSubEl = document.getElementById('dataStatsSub');
+                statusEl.innerText = `読込中... (${currentCityKey} / ${currentYearKey}年冬)`;
+                statusEl.className = "text-xs text-blue-700 font-bold leading-snug";
+
+                try {
+                    const parsed = await WeatherStore.loadDataset("winter", currentCityKey, currentYearKey);
+                    if (mySeq !== loadSeq) return; // 古い非同期応答を破棄
+
+                    currentCityKey = parsed.cityKey;
+                    currentYearKey = parsed.yearKey;
+                    weatherData = parsed.data;
+                    currentMeta = {
+                        cityName: parsed.cityName,
+                        lat: parsed.lat,
+                        lon: parsed.lon,
+                        desc: parsed.desc,
+                        hasRad: parsed.hasRad
+                    };
+
+                    const csvInput = document.getElementById('csvFileInput');
+                    if (csvInput) csvInput.value = "";
+
+                    statusEl.innerText = `現在: ${parsed.label}`;
+                    statusEl.className = "text-xs text-emerald-800 font-bold leading-snug";
+
+                    const radTxt = parsed.hasRad ? "全天日射量: 実測値" : "全天日射量: 日照から推定";
+                    statsSubEl.innerText =
+                        `${parsed.desc}｜北緯${parsed.lat.toFixed(2)}° 東経${parsed.lon.toFixed(2)}°｜平均${parsed.avgTemp.toFixed(1)}℃ / 最低${parsed.minTemp.toFixed(1)}℃ / 降雪${parsed.totalSnow}cm｜${radTxt}`;
+                    document.getElementById('survivalCoordSpec').innerText =
+                        `・適用座標: 北緯${parsed.lat.toFixed(2)}° / 東経${parsed.lon.toFixed(2)}° (${parsed.cityName})`;
+
+                    updateSelectorButtons();
+                    runSimulation();
+                } catch (err) {
+                    if (mySeq !== loadSeq) return;
+                    statusEl.innerText = `⚠️ データ読込エラー: ${err.message}`;
+                    statusEl.className = "text-xs text-red-600 font-bold leading-snug";
+                    statsSubEl.innerText = "ローカルでHTMLを直接開くとブラウザ制限でdata/を読めません。GitHub PagesまたはLive Server経由で開くか、下のCSV読み込みをご利用ください。";
+                }
+            }
+
+            // 純粋計算コア（選択都市の詳細計算 ＆ 8都市一括比較で共有）
+            function evaluateSurvivalCore(wData, meta, params, needHistory) {
+                const {
+                    battery_capacity_max, init_soc, dead_line_kWh,
+                    COP, pv_capacity, vent_rate, start_day_offset, passive_solar_factor
+                } = params;
+
+                const N_full = wData.length;
+                const start_idx = Math.min(Math.max(0, start_day_offset * 24), Math.max(0, N_full - 24));
+                const lat = (meta.lat || 42.985) * Math.PI / 180.0;
+                const lon_diff_deg = (meta.lon || 144.377) - 135.0;
+                const tilt = 40.0 * Math.PI / 180.0;
+                const sub_offsets = [-0.875, -0.625, -0.375, -0.125];
+
+                const panel_snow_full = new Float64Array(N_full);
+                const pv_gen_full = new Float64Array(N_full);
+                const tilted_rad_full = new Float64Array(N_full);
+
+                for (let i = 0; i < N_full; i++) {
+                    const row = wData[i];
+                    const hour = row.datetime.getUTCHours();
+                    const minute = row.datetime.getUTCMinutes();
+
+                    const day_of_year = getDayOfYearUTC(row.datetime);
+                    const hour_exact = hour + minute / 60.0;
+                    const delta = (23.45 * Math.sin(((360.0 / 365.0) * (284 + day_of_year)) * Math.PI / 180.0)) * Math.PI / 180.0;
+
+                    const B_rad = (2.0 * Math.PI * (day_of_year - 81)) / 365.0;
+                    const eot_hours = (9.87 * Math.sin(2.0 * B_rad) - 7.53 * Math.cos(B_rad) - 1.5 * Math.sin(B_rad)) / 60.0;
+
+                    let sum_sin_h = 0.0;
+                    let sum_cos_theta = 0.0;
+                    for (let s = 0; s < 4; s++) {
+                        const solar_h = hour_exact + sub_offsets[s] + eot_hours;
+                        const omega = ((solar_h - 12.0) * 15.0 + lon_diff_deg) * Math.PI / 180.0;
+                        const sh = Math.min(1.0, Math.max(0.0, Math.sin(lat) * Math.sin(delta) + Math.cos(lat) * Math.cos(delta) * Math.cos(omega)));
+                        const ct = (sh > 0.0)
+                            ? Math.min(1.0, Math.max(0.0, Math.sin(lat - tilt) * Math.sin(delta) + Math.cos(lat - tilt) * Math.cos(delta) * Math.cos(omega)))
+                            : 0.0;
+                        sum_sin_h += sh;
+                        sum_cos_theta += ct;
+                    }
+                    const sin_h = sum_sin_h / 4.0;
+                    const cos_theta = sum_cos_theta / 4.0;
+
+                    const prev_snow = (i > 0) ? panel_snow_full[i - 1] : 0.0;
+                    let current_snow = prev_snow + row.snow;
+
+                    const sun_clip = Math.min(1.0, Math.max(0.0, row.sunshine));
+                    const E0 = 1.0 + 0.033 * Math.cos((2.0 * Math.PI * day_of_year) / 365.0);
+                    const estimated_rad = (1.367 * E0 * sin_h) * (0.25 + 0.50 * sun_clip);
+                    const horizontal_rad_kwh = (Number.isFinite(row.solar_rad) && row.solar_rad >= 0.0)
+                        ? (row.solar_rad / 3.6)
+                        : estimated_rad;
+
+                    const Rb = (sin_h > 0.005) ? Math.min(4.0, Math.max(0.0, cos_theta / Math.max(sin_h, 0.05))) : 0.0;
+                    const direct_ratio = sun_clip;
+                    const diffuse_ratio = 1.0 - direct_ratio;
+                    const albedo = (current_snow > 0.0 || row.temp < 0.0) ? 0.5 : 0.2;
+                    const tilted_solar_rad = horizontal_rad_kwh * (
+                        direct_ratio * Rb +
+                        diffuse_ratio * ((1.0 + Math.cos(tilt)) / 2.0) +
+                        albedo * ((1.0 - Math.cos(tilt)) / 2.0)
+                    );
+                    tilted_rad_full[i] = tilted_solar_rad;
+                    const G_w_m2 = tilted_solar_rad * 1000.0;
+
+                    const pre_melt_transmittance = (current_snow <= 0.0) ? 1.0 : Math.exp(-0.3 * current_snow);
+                    const panel_temp_for_melt = row.temp + ((G_w_m2 * pre_melt_transmittance) / 800.0) * (41.0 - 20.0);
+
+                    if (row.temp >= 2.0 || panel_temp_for_melt >= 5.0) {
+                        current_snow = 0.0;
+                    } else if (row.temp >= 0.0) {
+                        current_snow *= 0.5;
+                    } else {
+                        current_snow *= 0.9;
+                        if (current_snow < 0.05) current_snow = 0.0;
+                    }
+                    panel_snow_full[i] = current_snow;
+
+                    const penalty = (current_snow <= 0.0) ? 1.0 : Math.exp(-0.3 * current_snow);
+                    const panel_temp = row.temp + ((G_w_m2 * penalty) / 800.0) * (41.0 - 20.0);
+                    const KPT = Math.max(0.7, Math.min(1.15, 1.0 - 0.0029 * (panel_temp - 25.0)));
+
+                    pv_gen_full[i] = pv_capacity * tilted_solar_rad * 0.8 * KPT * penalty;
+                }
+
+                const simWeather = wData.slice(start_idx);
+                const pv_gen_kW = pv_gen_full.subarray(start_idx);
+                const tilted_rad = tilted_rad_full.subarray(start_idx);
+                const N = simWeather.length;
+
+                let current_battery = battery_capacity_max * init_soc;
+                const standby_kW = 0.18;
+
+                const battery_history = needHistory ? new Float64Array(N) : null;
+                const room_temp_history = needHistory ? new Float64Array(N) : null;
+                const actual_demand_history = needHistory ? new Float64Array(N) : null;
+
+                let is_battery_dead = (current_battery <= dead_line_kWh + 1e-9);
+                let is_game_over = false;
+
+                const target_temp = 12.0;
+                const vent_threshold_temp = 15.0;
+                const transmission_loss = 0.46 * 45.0 + 24.0;
+                const ventilation_loss = 31.2 * vent_rate * 0.33;
+                const H_tr = (transmission_loss + ventilation_loss) / 1000.0;
+                const C_th = 0.397;
+                let T_in = 20.0;
+
+                let dead_idx = -1;
+                let exact_survival_hours = N;
+                let bat_dead_idx = is_battery_dead ? 0 : -1;
+                let min_bat = current_battery;
+                let min_bat_idx = 0;
+
+                function stepRoomTemp(T_start, temp_out, H, Q_in, dt) {
+                    if (dt <= 0.0) return T_start;
+                    const T_eq = temp_out + Q_in / H;
+                    return T_eq + (T_start - T_eq) * Math.exp(-(H * dt) / C_th);
+                }
+
+                for (let i = 0; i < N; i++) {
+                    const temp_out = simWeather[i].temp;
+                    const pv_gen = pv_gen_kW[i];
+                    const life_kW = survival_lifestyle_kW[simWeather[i].datetime.getUTCHours()];
+
+                    const capacity_ratio = calcArrheniusRatio(temp_out);
+                    const effective_max_capacity = battery_capacity_max * capacity_ratio;
+                    const eff = Math.max(0.5, Math.min(0.95, 0.95 * capacity_ratio));
+
+                    const COP_eff = (COP > 1.05)
+                        ? Math.max(1.0, COP * Math.max(0.45, Math.min(1.15, 1.0 + 0.022 * (temp_out - 7.0))))
+                        : COP;
+
+                    const passive_solar_kW = tilted_rad[i] * passive_solar_factor;
+                    const internal_heat_active = 0.1 + life_kW * 0.30 + passive_solar_kW;
+                    const internal_heat_unpowered = 0.1 + passive_solar_kW;
+                    const H_eff = (T_in > vent_threshold_temp) ? (H_tr * 3.0) : H_tr;
+
+                    let total_demand = 0.0;
+                    let T_next = T_in;
+                    let step_time_to_zero = null;
+
+                    if (!is_battery_dead && !is_game_over) {
+                        const T_unheated = stepRoomTemp(T_in, temp_out, H_eff, internal_heat_active, 1.0);
+                        let heater_kW = 0.0;
+
+                        if (T_unheated < target_temp) {
+                            const exp_1h = Math.exp(-H_tr / C_th);
+                            const q_total_needed = H_tr * ((target_temp - temp_out - (T_in - temp_out) * exp_1h) / (1.0 - exp_1h));
+                            const required_heater_thermal = Math.max(0.0, q_total_needed - internal_heat_active);
+                            heater_kW = Math.min(required_heater_thermal / COP_eff, 1.2);
+                        }
+
+                        const planned_demand = heater_kW + life_kW + standby_kW;
+                        const available_bat_kWh = Math.max(0.0, current_battery - dead_line_kWh);
+                        const deliverable_bat_kWh = available_bat_kWh * eff;
+                        const net_deficit_kW = planned_demand - pv_gen;
+
+                        if (net_deficit_kW > deliverable_bat_kWh) {
+                            const dt_on = Math.min(1.0, Math.max(0.0, deliverable_bat_kWh / net_deficit_kW));
+                            const dt_off = 1.0 - dt_on;
+
+                            const Q_on = heater_kW * COP_eff + internal_heat_active;
+                            const T_mid = stepRoomTemp(T_in, temp_out, H_eff, Q_on, dt_on);
+                            T_next = stepRoomTemp(T_mid, temp_out, H_tr, internal_heat_unpowered, dt_off);
+
+                            const T_eq_off = temp_out + internal_heat_unpowered / H_tr;
+                            if (T_mid > 0.0 && T_next <= 0.0 && T_eq_off < 0.0) {
+                                const tz = (C_th / H_tr) * Math.log((T_mid - T_eq_off) / (0.0 - T_eq_off));
+                                step_time_to_zero = dt_on + Math.min(dt_off, Math.max(0.0, tz));
+                            }
+
+                            total_demand = planned_demand * dt_on;
+                            current_battery = dead_line_kWh;
+                            is_battery_dead = true;
+                            bat_dead_idx = i;
+                        } else {
+                            const Q_total = heater_kW * COP_eff + internal_heat_active;
+                            T_next = stepRoomTemp(T_in, temp_out, H_eff, Q_total, 1.0);
+                            total_demand = planned_demand;
+
+                            const net_power = pv_gen - total_demand;
+                            if (net_power > 0.0) {
+                                const charge_ceiling = Math.min(battery_capacity_max, Math.max(current_battery, effective_max_capacity));
+                                current_battery = Math.min(charge_ceiling, current_battery + net_power * eff);
+                            } else {
+                                current_battery = Math.max(dead_line_kWh, current_battery + net_power / eff);
+                            }
+
+                            if (current_battery <= dead_line_kWh + 1e-6) {
+                                current_battery = dead_line_kWh;
+                                is_battery_dead = true;
+                                bat_dead_idx = i;
+                            }
+                        }
+                    } else {
+                        T_next = stepRoomTemp(T_in, temp_out, H_eff, internal_heat_unpowered, 1.0);
+                        const T_eq_off = temp_out + internal_heat_unpowered / H_eff;
+                        if (T_in > 0.0 && T_next <= 0.0 && T_eq_off < 0.0) {
+                            step_time_to_zero = Math.min(1.0, Math.max(0.0, (C_th / H_eff) * Math.log((T_in - T_eq_off) / (0.0 - T_eq_off))));
+                        }
+                        total_demand = 0.0;
+                    }
+
+                    if (T_next <= 0.0 && !is_game_over) {
+                        is_game_over = true;
+                        dead_idx = i;
+                        const frac = (step_time_to_zero !== null) ? step_time_to_zero : 1.0;
+                        exact_survival_hours = i + frac;
+                        if (!needHistory) break;
+                    }
+
+                    T_in = T_next;
+
+                    if (needHistory) {
+                        room_temp_history[i] = T_in;
+                        if (is_game_over && i > dead_idx) {
+                            actual_demand_history[i] = 0.0;
+                            battery_history[i] = battery_history[i - 1];
+                        } else {
+                            actual_demand_history[i] = total_demand;
+                            battery_history[i] = current_battery;
+                        }
+                    }
+                    if (!is_game_over || i === dead_idx) {
+                        if (current_battery < min_bat) {
+                            min_bat = current_battery;
+                            min_bat_idx = i;
+                        }
+                    }
+                }
+
+                return {
+                    N, simWeather, pv_gen_kW,
+                    battery_history, room_temp_history, actual_demand_history,
+                    dead_idx, exact_survival_hours, bat_dead_idx, min_bat, min_bat_idx
+                };
+            }
+
+            function renderCityComparison(params) {
+                const tbody = document.getElementById('cityCompareTbody');
+                const btn = document.getElementById('runBatchCompareBtn');
+                if (!tbody) return;
+
+                const mf = WeatherStore.getManifestSync();
+                if (!mf || !batchLoadedYears.has(currentYearKey)) {
+                    document.getElementById('compareSubtitle').innerText =
+                        `${currentYearKey}年冬の全8都市比較（ボタンを押すと残り都市を並列取得・以降はスライダー連動）`;
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = `⚡ ${currentYearKey}年冬の全8都市を一括比較する`;
+                        btn.className = "px-3.5 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition whitespace-nowrap";
+                    }
+                    tbody.innerHTML = `<tr>
+                        <td colspan="6" class="py-6 text-center text-xs text-slate-400">
+                            初期通信を抑えるため、現在選択中の都市のみ読み込んでいます。右上のボタンを押すと ${currentYearKey}年冬の全8都市を同時計算します。
+                        </td>
+                    </tr>`;
+                    return;
+                }
+
+                document.getElementById('compareSubtitle').innerText =
+                    `${currentYearKey}年冬・現在のスライダー条件で道内8都市を同時計算中（行クリックでその都市に切替）`;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = `✓ ${currentYearKey}年冬 8都市比較中`;
+                    btn.className = "px-3.5 py-2 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 transition whitespace-nowrap";
+                }
+
+                const rowsHtml = (mf.cities || []).map(cMeta => {
+                    const parsed = WeatherStore.getCached("winter", cMeta.id, currentYearKey);
+                    if (!parsed) return "";
+                    const res = evaluateSurvivalCore(
+                        parsed.data,
+                        { lat: parsed.lat, lon: parsed.lon },
+                        params,
+                        false
+                    );
+                    const isSelected = !isCustomCsv && cMeta.id === currentCityKey;
+                    const rowClass = isSelected
+                        ? "bg-blue-50/90 font-bold text-slate-900 cursor-pointer"
+                        : "hover:bg-slate-50 text-slate-700 cursor-pointer transition";
+
+                    let survHtml = "";
+                    if (res.dead_idx >= 0) {
+                        const rH = Math.round(res.exact_survival_hours * 10) / 10;
+                        const d = Math.floor(Math.floor(rH) / 24);
+                        const h = Math.floor(rH) % 24;
+                        const badgeCls = rH >= 24 * 14 ? "text-orange-700 bg-orange-50" : "text-red-700 bg-red-50";
+                        survHtml = `<span class="px-2 py-0.5 rounded font-bold ${badgeCls}">${rH.toFixed(1)}h (${d}日${h}h)</span>`;
+                    } else {
+                        const d = Math.floor(res.N / 24);
+                        survHtml = `<span class="px-2 py-0.5 rounded font-bold text-emerald-700 bg-emerald-50">🎉 ${d}日間突破</span>`;
+                    }
+                    const radBadge = parsed.hasRad
+                        ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-semibold">実測</span>'
+                        : '<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">推定</span>';
+
+                    return `<tr class="${rowClass}" data-compare-city="${cMeta.id}">
+                        <td class="py-2 px-2.5 text-left whitespace-nowrap">
+                            ${isSelected ? '▶ ' : ''}${parsed.cityName}
+                            <span class="text-[10px] text-slate-400 font-normal hidden sm:inline ml-1">${parsed.desc}</span>
+                        </td>
+                        <td class="py-2 px-2.5 whitespace-nowrap">${survHtml}</td>
+                        <td class="py-2 px-2.5 whitespace-nowrap">${res.min_bat.toFixed(1)} kWh</td>
+                        <td class="py-2 px-2.5 whitespace-nowrap">${parsed.avgTemp.toFixed(1)}℃ / ${parsed.minTemp.toFixed(1)}℃</td>
+                        <td class="py-2 px-2.5 whitespace-nowrap">${parsed.totalSnow} cm</td>
+                        <td class="py-2 px-2.5 text-center">${radBadge}</td>
+                    </tr>`;
+                }).join('');
+
+                tbody.innerHTML = rowsHtml;
+                tbody.querySelectorAll('tr[data-compare-city]').forEach(tr => {
+                    tr.addEventListener('click', () => {
+                        loadBuiltInDataset(tr.dataset.compareCity, currentYearKey);
+                    });
+                });
+            }
+
+            async function triggerBatchComparison() {
+                const btn = document.getElementById('runBatchCompareBtn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerText = "⏳ 8都市データ並列取得中...";
+                }
+                try {
+                    await WeatherStore.loadAllCitiesForYear("winter", currentYearKey);
+                    batchLoadedYears.add(currentYearKey);
+                    runSimulation();
+                } catch (err) {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = "⚠️ 取得失敗（再試行）";
+                    }
+                    alert("8都市データの一括取得に失敗しました: " + err.message);
+                }
+            }
+
+            function runSimulation(event) {
+                if (!weatherData || weatherData.length === 0) return;
+
+                const socEl = document.getElementById('socInput');
+                const limitEl = document.getElementById('limitInput');
+
+                if (parseFloat(socEl.value) < parseFloat(limitEl.value)) {
+                    if (event && event.target && event.target.id === 'limitInput') {
+                        socEl.value = limitEl.value;
+                    } else {
+                        limitEl.value = socEl.value;
+                    }
+                }
+
+                const battery_capacity_max = parseFloat(document.getElementById('evInput').value);
+                const init_soc = parseFloat(socEl.value) / 100.0;
+                const limit_ratio = parseFloat(limitEl.value) / 100.0;
+                const COP = parseFloat(document.getElementById('copInput').value);
+                const pv_capacity = parseFloat(document.getElementById('pvInput').value);
+                const vent_rate = parseFloat(document.getElementById('ventInput').value);
+                const start_day_offset = parseInt(document.getElementById('startDaySelect').value, 10) || 0;
+                const passive_solar_factor = parseFloat(document.getElementById('passiveSolarSelect').value);
+                const plot_mode = document.getElementById('plotRangeSelect').value;
+
+                const dead_line_kWh = battery_capacity_max * limit_ratio;
+
+                document.getElementById('evVal').innerText = `${battery_capacity_max} kWh`;
+                document.getElementById('socVal').innerText = `${Math.round(init_soc * 100)} %`;
+                document.getElementById('limitVal').innerText = `${Math.round(limit_ratio * 100)} %`;
+                document.getElementById('limitNote').innerText = `※new08_2基準: 10% (現在の下限: ${dead_line_kWh.toFixed(1)} kWh)`;
+                document.getElementById('copVal').innerText = COP.toFixed(1);
+                document.getElementById('pvVal').innerText = `${pv_capacity.toFixed(1)} kW`;
+                document.getElementById('ventVal').innerText = `${vent_rate.toFixed(2)} 回/h`;
+
+                const params = {
+                    battery_capacity_max, init_soc, dead_line_kWh,
+                    COP, pv_capacity, vent_rate, start_day_offset, passive_solar_factor
+                };
+
+                const res = evaluateSurvivalCore(weatherData, currentMeta, params, true);
+                const {
+                    N, simWeather, pv_gen_kW,
+                    battery_history, room_temp_history, actual_demand_history,
+                    dead_idx, exact_survival_hours, bat_dead_idx, min_bat, min_bat_idx
+                } = res;
+
+                const survivalTotalHoursEl = document.getElementById('survivalTotalHours');
+                const survivalDaysEl = document.getElementById('survivalDays');
+                const survivalHoursEl = document.getElementById('survivalHours');
+                const batDeadTimeEl = document.getElementById('batDeadTimeEl');
+                const roomDeadTimeEl = document.getElementById('roomDeadTimeEl');
+                const minBatEl = document.getElementById('minBatEl');
+                const resultMessage = document.getElementById('resultMessage');
+
+                batDeadTimeEl.innerText = (bat_dead_idx >= 0)
+                    ? `バッテリー停止: ${formatFullDateTime(simWeather[bat_dead_idx].datetime)}`
+                    : `バッテリー停止: なし（稼働継続）`;
+
+                minBatEl.innerText = `最低残量: ${min_bat.toFixed(2)} kWh (${formatDateTime(simWeather[min_bat_idx].datetime)})`;
+
+                if (dead_idx >= 0) {
+                    const roundedTotal = Math.round(exact_survival_hours * 10) / 10;
+                    const totalHoursInt = Math.floor(roundedTotal);
+                    const d = Math.floor(totalHoursInt / 24);
+                    const h = totalHoursInt % 24;
+
+                    survivalTotalHoursEl.innerText = roundedTotal.toFixed(1);
+                    survivalDaysEl.innerText = d;
+                    survivalHoursEl.innerText = h;
+                    const exactDeadDt = new Date(simWeather[0].datetime.getTime() + Math.round(roundedTotal * 60) * 60 * 1000);
+                    roomDeadTimeEl.innerText = `限界室温(0℃)到達: ${formatFullDateTime(exactDeadDt)}`;
+
+                    if (roundedTotal >= 24 * 14) {
+                        resultMessage.innerText = `⚠️ 【${currentMeta.cityName}】約 ${d} 日と ${h} 時間 (${roundedTotal.toFixed(1)}時間) 生存後に限界到達`;
+                        resultMessage.className = "mt-3 text-sm font-medium px-4 py-1.5 bg-orange-50 text-orange-700 rounded-full inline-block mx-auto";
+                    } else {
+                        resultMessage.innerText = `☠️ 【${currentMeta.cityName}】約 ${d} 日と ${h} 時間 (${roundedTotal.toFixed(1)}時間) で限界到達。早期の避難が必要です。`;
+                        resultMessage.className = "mt-3 text-sm font-medium px-4 py-1.5 bg-red-50 text-red-700 rounded-full inline-block mx-auto";
+                    }
+                } else {
+                    const maxH = N;
+                    const d = Math.floor(maxH / 24);
+                    const h = maxH % 24;
+                    survivalTotalHoursEl.innerText = `${maxH}+`;
+                    survivalDaysEl.innerText = d;
+                    survivalHoursEl.innerText = h;
+                    roomDeadTimeEl.innerText = `限界室温(0℃)到達: なし（無傷で突破）`;
+                    resultMessage.innerText = `🎉 【${currentMeta.cityName}】大成功！対象期間（${d}日間）のブラックアウトを無傷で乗り切りました！`;
+                    resultMessage.className = "mt-3 text-sm font-medium px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-full inline-block mx-auto";
+                }
+
+                let end_idx = N;
+                if (plot_mode === "auto") {
+                    end_idx = (dead_idx >= 0) ? Math.min(dead_idx + 48, N) : Math.min(24 * 30, N);
+                }
+
+                const labels = [];
+                const plot_bat = [];
+                const plot_dead_line = [];
+                const plot_temp_out = [];
+                const plot_room_temp = [];
+                const plot_zero_line = [];
+                const plot_demand = [];
+                const plot_pv = [];
+
+                for (let i = 0; i < end_idx; i++) {
+                    labels.push(formatDateTime(simWeather[i].datetime));
+                    plot_bat.push(battery_history[i]);
+                    plot_dead_line.push(dead_line_kWh);
+                    plot_temp_out.push(simWeather[i].temp);
+                    plot_room_temp.push(room_temp_history[i]);
+                    plot_zero_line.push(0.0);
+                    plot_pv.push(pv_gen_kW[i]);
+                    plot_demand.push(actual_demand_history[i]);
+                }
+
+                drawCharts(labels, plot_bat, plot_dead_line, plot_temp_out, plot_room_temp, plot_zero_line, plot_demand, plot_pv, battery_capacity_max);
+                renderCityComparison(params);
+            }
+
+            function drawCharts(labels, batData, deadLineData, tempOutData, roomTempData, zeroLineData, demandData, pvData, maxCap) {
+                const upperMaxY = Math.max(45, maxCap + 5);
+
+                if (upperChartInstance && lowerChartInstance) {
+                    upperChartInstance.data.labels = labels;
+                    upperChartInstance.data.datasets[0].data = batData;
+                    upperChartInstance.data.datasets[1].data = deadLineData;
+                    upperChartInstance.data.datasets[2].data = roomTempData;
+                    upperChartInstance.data.datasets[3].data = tempOutData;
+                    upperChartInstance.data.datasets[4].data = zeroLineData;
+                    upperChartInstance.options.scales.y.max = upperMaxY;
+                    upperChartInstance.update('none');
+
+                    lowerChartInstance.data.labels = labels;
+                    lowerChartInstance.data.datasets[0].data = demandData;
+                    lowerChartInstance.data.datasets[1].data = pvData;
+                    lowerChartInstance.update('none');
+                    return;
+                }
+
+                const ctxUpper = document.getElementById('upperChart').getContext('2d');
+                const ctxLower = document.getElementById('lowerChart').getContext('2d');
+
+                upperChartInstance = new Chart(ctxUpper, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'EVバッテリー残量(左軸)', data: batData, borderColor: '#16a34a', borderWidth: 2.0, yAxisID: 'y', pointRadius: 0 },
+                            { label: '限界（システム停止）', data: deadLineData, borderColor: '#dc2626', borderWidth: 1.8, borderDash: [6, 4], yAxisID: 'y', pointRadius: 0 },
+                            { label: '室温(右軸)', data: roomTempData, borderColor: '#ef4444', borderWidth: 2.0, yAxisID: 'y1', pointRadius: 0 },
+                            { label: '外気温(右軸)', data: tempOutData, borderColor: '#9333ea', borderWidth: 1.2, borderDash: [2, 2], yAxisID: 'y1', pointRadius: 0 },
+                            { label: '限界室温(0℃)', data: zeroLineData, borderColor: '#000000', borderWidth: 1.3, borderDash: [5, 5], yAxisID: 'y1', pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const val = context.parsed.y;
+                                        return (context.dataset.yAxisID === 'y')
+                                            ? `${label}: ${val.toFixed(2)} kWh`
+                                            : `${label}: ${val.toFixed(1)} ℃`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 10 } },
+                            y: { type: 'linear', position: 'left', title: { display: true, text: 'バッテリー残量 (kWh)' }, min: 0, max: upperMaxY },
+                            y1: { type: 'linear', position: 'right', title: { display: true, text: '温度 (℃)' }, suggestedMin: -20, suggestedMax: 22, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+
+                lowerChartInstance = new Chart(ctxLower, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: '消費電力 (暖房＋生活＋待機)', data: demandData, borderColor: '#f97316', borderWidth: 1.6, fill: false, pointRadius: 0 },
+                            { label: '太陽光発電量', data: pvData, borderColor: '#38bdf8', backgroundColor: 'rgba(135, 206, 235, 0.55)', borderWidth: 1, fill: true, pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label || ''}: ${context.parsed.y.toFixed(2)} kW`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 10 } },
+                            y: { type: 'linear', position: 'left', title: { display: true, text: '電力 (kW)' }, min: 0, suggestedMax: 3.5 }
+                        }
+                    }
+                });
+            }
+
+            function handleCsvUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const buffer = evt.target.result;
+                    let text = "";
+                    try {
+                        text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+                    } catch (_) {
+                        text = new TextDecoder('shift_jis').decode(buffer);
+                    }
+                    text = text.replace(/^﻿/, '');
+                    const lines = text.split(/
+?
+/);
+                    const parsed = [];
+
+                    let tempCol = 1, snowCol = 4, sunCol = 8, radCol = -1;
+                    for (let i = 0; i < Math.min(10, lines.length); i++) {
+                        if (lines[i].includes('気温') && (lines[i].includes('日照') || lines[i].includes('降雪'))) {
+                            const hCols = lines[i].split(',');
+                            const subCols1 = (i + 1 < lines.length) ? lines[i + 1].split(',') : [];
+                            const subCols2 = (i + 2 < lines.length) ? lines[i + 2].split(',') : [];
+                            let foundTemp = false, foundSnow = false, foundSun = false, foundRad = false;
+                            for (let c = 1; c < hCols.length; c++) {
+                                const hName = hCols[c].trim();
+                                const sName = ((subCols1[c] || '') + ' ' + (subCols2[c] || '')).trim();
+                                if (sName.includes('品質') || sName.includes('均質') || sName.includes('現象')) continue;
+                                if (hName.includes('気温') && !foundTemp) { tempCol = c; foundTemp = true; }
+                                else if (hName.includes('降雪') && !foundSnow) { snowCol = c; foundSnow = true; }
+                                else if (hName.includes('日照') && !foundSun) { sunCol = c; foundSun = true; }
+                                else if (hName.includes('日射') && !foundRad) { radCol = c; foundRad = true; }
+                            }
+                            break;
+                        }
+                    }
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const cols = lines[i].split(',');
+                        if (cols.length < 5) continue;
+                        const { dt } = parseJmaDateTimeUTC(cols[0]);
+                        if (!dt) continue;
+
+                        const temp = parseJmaNumberCommon(cols[tempCol]);
+                        const snow = parseJmaNumberCommon(cols[snowCol]);
+                        const sun  = parseJmaNumberCommon(cols[sunCol]);
+                        const rad  = (radCol >= 0 && cols.length > radCol) ? parseJmaNumberCommon(cols[radCol]) : NaN;
+
+                        parsed.push({
+                            datetime: dt,
+                            temp: Number.isFinite(temp) ? temp : (parsed.length > 0 ? parsed[parsed.length - 1].temp : 0.0),
+                            snow: Number.isFinite(snow) ? Math.max(0.0, snow) : 0.0,
+                            sunshine: Number.isFinite(sun) ? Math.min(1.0, Math.max(0.0, sun)) : 0.0,
+                            solar_rad: Number.isFinite(rad) ? Math.max(0.0, rad) : NaN
+                        });
+                    }
+
+                    const statusEl = document.getElementById('dataStatus');
+                    if (parsed.length === 0) {
+                        statusEl.innerText = `エラー: ${file.name} から有効な気象データを読み取れませんでした。`;
+                        statusEl.className = "text-xs text-red-600 font-bold leading-snug";
+                        return;
+                    }
+
+                    parsed.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+
+                    const decRow = parsed.find(r => r.datetime.getUTCMonth() === 11);
+                    let filtered = parsed;
+                    if (decRow) {
+                        const startYear = decRow.datetime.getUTCFullYear();
+                        const targetStart = new Date(Date.UTC(startYear, 11, 1, 0, 0, 0));
+                        const targetEnd = new Date(Date.UTC(startYear + 1, 2, 1, 0, 0, 0));
+                        const winterSlice = parsed.filter(r => r.datetime.getTime() >= targetStart.getTime() && r.datetime.getTime() < targetEnd.getTime());
+                        if (winterSlice.length > 0) {
+                            filtered = winterSlice;
+                            if (filtered[0].datetime.getTime() > targetStart.getTime()) {
+                                filtered.unshift({
+                                    datetime: targetStart,
+                                    temp: filtered[0].temp,
+                                    snow: filtered[0].snow,
+                                    sunshine: filtered[0].sunshine,
+                                    solar_rad: filtered[0].solar_rad
+                                });
+                            }
+                        }
+                    }
+
+                    isCustomCsv = true;
+                    weatherData = filtered;
+                    currentMeta = { cityName: file.name, lat: 42.985, lon: 144.377, desc: "外部CSV読込", hasRad: radCol >= 0 };
+                    updateSelectorButtons();
+                    statusEl.innerText = `現在: ${file.name} を読み込みました (全${weatherData.length}時間)`;
+                    statusEl.className = "text-xs text-purple-800 font-bold leading-snug";
+                    document.getElementById('dataStatsSub').innerText = `外部CSVデータ使用中（座標は基準値: 北緯42.99° 東経144.38°）`;
+                    runSimulation();
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            function init() {
+                document.getElementById('csvFileInput').addEventListener('change', handleCsvUpload);
+                const batchBtn = document.getElementById('runBatchCompareBtn');
+                if (batchBtn) batchBtn.addEventListener('click', triggerBatchComparison);
+                document.querySelectorAll('#cityBtnGrid .city-btn').forEach(btn => {
+                    btn.addEventListener('click', () => loadBuiltInDataset(btn.dataset.city, currentYearKey));
+                });
+                document.querySelectorAll('#yearBtnGrid .year-btn').forEach(btn => {
+                    btn.addEventListener('click', () => loadBuiltInDataset(currentCityKey, btn.dataset.year));
+                });
+
+                ['evInput', 'socInput', 'limitInput', 'copInput', 'pvInput', 'ventInput'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', runSimulation);
+                });
+                document.getElementById('startDaySelect').addEventListener('change', runSimulation);
+                document.getElementById('passiveSolarSelect').addEventListener('change', runSimulation);
+                document.getElementById('plotRangeSelect').addEventListener('change', runSimulation);
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    document.getElementById('evInput').value = 40;
+                    document.getElementById('socInput').value = 80;
+                    document.getElementById('limitInput').value = 10;
+                    document.getElementById('copInput').value = 2.0;
+                    document.getElementById('pvInput').value = 5.0;
+                    document.getElementById('ventInput').value = 0.20;
+                    document.getElementById('startDaySelect').value = "0";
+                    document.getElementById('passiveSolarSelect').value = "0.35";
+                    document.getElementById('plotRangeSelect').value = "auto";
+                    runSimulation();
+                });
+
+                loadBuiltInDataset("kushiro", "2025");
+            }
+
+            function resizeCharts() {
+                if (upperChartInstance) upperChartInstance.resize();
+                if (lowerChartInstance) lowerChartInstance.resize();
+            }
+
+            return { init, resizeCharts };
+        })();
+
+        // =========================================================
+        // 3. V2H経済性シミュレーション モジュール
+        //    冬期 (economy new DF02.py) ＆ 夏期 (economy new JA01.py) 完全移植
+        // =========================================================
+        const EconomyApp = (() => {
+            const SEASON_DEFAULTS = {
+                winter: {
+                    price_night: 22.0,
+                    price_day: 35.0,
+                    price_peak: 42.0,
+                    sell_price_fixed: 8.0,
+                    lat_deg: 42.98,
+                    tilt_deg: 40.0,
+                    azimuth_deg: 0.0,
+                    pv_capacity_kW: 5.0,
+                    pv_system_loss: 0.80,
+                    panel_noct: 41.0,
+                    panel_temp_coeff: 0.0029,
+                    target_temp: 20.0,
+                    base_cop: 3.0,
+                    u_value: 0.46,
+                    envelope_area: 280.0,
+                    air_volume: 300.0,
+                    ach: 0.5,
+                    c_th: 5.0,
+                    max_hvac_kW: 6.0,
+                    solar_gain_factor: 0.35,
+                    battery_max_kWh: 60.0,
+                    initial_soc_kWh: 45.0,
+                    max_charge_kW: 6.0,
+                    max_discharge_kW: 6.0,
+                    min_reserve_kWh: 15.0,
+                    v2h_standby_kW: 0.04,
+                    night_target_weekday: 0.95,
+                    night_target_weekend: 0.75,
+                    use_breakeven_control: true,
+                    breakeven_margin_yen: 1.0
+                },
+                summer: {
+                    price_night: 22.0,
+                    price_day: 35.0,
+                    price_peak: 42.0,
+                    sell_price_fixed: 8.0,
+                    lat_deg: 42.98,
+                    tilt_deg: 40.0,
+                    azimuth_deg: 0.0,
+                    pv_capacity_kW: 5.0,
+                    pv_system_loss: 0.80,
+                    panel_noct: 41.0,
+                    panel_temp_coeff: 0.0029,
+                    target_temp: 26.0,
+                    base_cop: 4.0,
+                    u_value: 0.46,
+                    envelope_area: 280.0,
+                    air_volume: 300.0,
+                    ach: 0.5,
+                    c_th: 5.0,
+                    max_hvac_kW: 4.0,
+                    solar_gain_factor: 0.50,
+                    battery_max_kWh: 60.0,
+                    initial_soc_kWh: 45.0,
+                    max_charge_kW: 6.0,
+                    max_discharge_kW: 6.0,
+                    min_reserve_kWh: 15.0,
+                    v2h_standby_kW: 0.04,
+                    night_target_weekday: 0.75,
+                    night_target_weekend: 0.55,
+                    use_breakeven_control: true,
+                    breakeven_margin_yen: 1.0
+                }
+            };
+
+            const WEEKDAY_LIFESTYLE = [0.3,0.3,0.3,0.3,0.3,0.3, 1.5,1.2, 0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4, 0.8,1.2,2.0,1.5,1.0,0.7,0.4];
+            const WEEKEND_LIFESTYLE = [0.3,0.3,0.3,0.3,0.3,0.3,0.3, 1.2,1.5,1.0,0.8,0.6,0.8,0.8,0.6,0.8,1.2,1.8,2.2,1.6,1.2,0.8,0.5,0.3];
+            const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
+
+            let season = 'winter';
+            let winterCity = 'kushiro';
+            let winterYear = '2025';
+            let activeCityLat = 42.985;
+            let activeCityName = '釧路';
+            let customWeatherBySeason = { winter: null, summer: null };
+            let activeWeather = [];
+            let activeDataLabel = '';
+            let activeDataIsSample = false;
+            let activeDataWarning = '';
+            let lastResult = null;
+            let charts = {};
+
+            function fmtYen(v) {
+                return Math.round(v).toLocaleString('ja-JP');
+            }
+
+            function fmtDateShort(dt) {
+                const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+                const d = String(dt.getUTCDate()).padStart(2, '0');
+                const w = WEEKDAYS_JP[dt.getUTCDay()];
+                const h = String(dt.getUTCHours()).padStart(2, '0');
+                return `${m}/${d}(${w}) ${h}:00`;
+            }
+
+            function fmtDateFull(dt) {
+                const y = dt.getUTCFullYear();
+                const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+                const d = String(dt.getUTCDate()).padStart(2, '0');
+                const h = String(dt.getUTCHours()).padStart(2, '0');
+                return `${y}-${m}-${d} ${h}:00`;
+            }
+
+            function applySeasonDefaultsToUI(s) {
+                const d = SEASON_DEFAULTS[s];
+                document.getElementById('eco-price-night').value = d.price_night;
+                document.getElementById('eco-price-day').value = d.price_day;
+                document.getElementById('eco-price-peak').value = d.price_peak;
+                document.getElementById('eco-price-sell').value = d.sell_price_fixed;
+                document.getElementById('eco-pv-cap').value = d.pv_capacity_kW;
+                document.getElementById('eco-batt-max').value = d.battery_max_kWh;
+                document.getElementById('eco-min-res').value = d.min_reserve_kWh;
+                document.getElementById('eco-night-wkday').value = Math.round(d.night_target_weekday * 100);
+                document.getElementById('eco-night-wkend').value = Math.round(d.night_target_weekend * 100);
+                document.getElementById('eco-use-breakeven').checked = d.use_breakeven_control;
+                document.getElementById('eco-target-temp').value = d.target_temp;
+                document.getElementById('eco-base-cop').value = d.base_cop;
+                document.getElementById('eco-week-start').value = 0;
+            }
+
+            function readConfigFromUI() {
+                const base = Object.assign({}, SEASON_DEFAULTS[season]);
+                base.price_night = Math.max(0, parseFloat(document.getElementById('eco-price-night').value) || 22);
+                base.price_day = Math.max(0, parseFloat(document.getElementById('eco-price-day').value) || 35);
+                base.price_peak = Math.max(0, parseFloat(document.getElementById('eco-price-peak').value) || 42);
+                base.sell_price_fixed = Math.max(0, parseFloat(document.getElementById('eco-price-sell').value) || 8);
+                base.pv_capacity_kW = parseFloat(document.getElementById('eco-pv-cap').value);
+                base.battery_max_kWh = parseFloat(document.getElementById('eco-batt-max').value);
+                base.min_reserve_kWh = Math.min(base.battery_max_kWh - 5, parseFloat(document.getElementById('eco-min-res').value));
+                base.initial_soc_kWh = Math.min(base.battery_max_kWh, Math.max(base.min_reserve_kWh, 45.0 * (base.battery_max_kWh / 60.0)));
+                base.night_target_weekday = parseFloat(document.getElementById('eco-night-wkday').value) / 100.0;
+                base.night_target_weekend = parseFloat(document.getElementById('eco-night-wkend').value) / 100.0;
+                base.use_breakeven_control = document.getElementById('eco-use-breakeven').checked;
+                base.target_temp = parseFloat(document.getElementById('eco-target-temp').value);
+                base.base_cop = parseFloat(document.getElementById('eco-base-cop').value);
+                base.snow_col_is_depth = document.getElementById('eco-snow-is-depth').checked;
+                base.lat_deg = activeCityLat;
+
+                // ラベル更新
+                document.getElementById('eco-pv-cap-val').innerText = `${base.pv_capacity_kW.toFixed(1)} kW`;
+                document.getElementById('eco-batt-max-val').innerText = `${base.battery_max_kWh.toFixed(0)} kWh`;
+                document.getElementById('eco-min-res-val').innerText = `${base.min_reserve_kWh.toFixed(0)} kWh`;
+                document.getElementById('eco-night-wkday-val').innerText = `${Math.round(base.night_target_weekday * 100)}%`;
+                document.getElementById('eco-night-wkend-val').innerText = `${Math.round(base.night_target_weekend * 100)}%`;
+                document.getElementById('eco-target-temp-val').innerText = `${base.target_temp.toFixed(1)} ℃`;
+                document.getElementById('eco-base-cop-val').innerText = `${base.base_cop.toFixed(1)}`;
+                return base;
+            }
+
+            function updateSeasonThemeUI() {
+                const isWinter = (season === 'winter');
+                const sec = document.getElementById('view-economy');
+                const header = document.getElementById('eco-header');
+                const badge = document.getElementById('eco-season-badge');
+                const sub = document.getElementById('eco-header-sub');
+                const btnW = document.getElementById('eco-btn-winter');
+                const btnS = document.getElementById('eco-btn-summer');
+                const kpiBar = document.getElementById('eco-kpi-bar');
+
+                if (isWinter) {
+                    sec.classList.remove('season-summer');
+                    header.className = "bg-gradient-to-r from-slate-800 via-sky-900 to-slate-800 text-white shadow-sm py-4 px-6 mb-6 transition-colors duration-300";
+                    badge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-500 text-white";
+                    badge.innerText = "❄️ 冬期モデル (DF02)";
+                    sub.innerText = "寒冷地最適化制御（12〜2月・暖房20℃・パネル積雪滑落・損益分岐放電・自己診断付き）";
+                    btnW.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition bg-sky-500 text-white shadow";
+                    btnS.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white";
+                    kpiBar.className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-sky-500 to-blue-600";
+
+                    document.getElementById('eco-winter-year-wrap').classList.remove('hidden');
+                    document.getElementById('eco-summer-sample-wrap').classList.add('hidden');
+                    document.getElementById('eco-snow-depth-wrap').classList.remove('hidden');
+                    document.getElementById('eco-hvac-section-title').innerText = "建物・暖房設定（冬期：ISO 13790 RC回路）";
+                    document.getElementById('eco-target-temp-label').innerText = "暖房目標室温 (℃)";
+                    document.getElementById('eco-base-cop-label').innerText = "基準暖房COP (外気20℃時)";
+                    document.getElementById('eco-metric-hvac-label').innerText = "暖房負荷 / 総需要";
+                    document.getElementById('eco-breakdown-chart-title').innerText = "④ 冬期3ヶ月の時間帯別コスト内訳比較（全項目合算＝実質合計）";
+                } else {
+                    sec.classList.add('season-summer');
+                    header.className = "bg-gradient-to-r from-slate-800 via-amber-800 to-orange-900 text-white shadow-sm py-4 px-6 mb-6 transition-colors duration-300";
+                    badge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-500 text-white";
+                    badge.innerText = "☀️ 夏期モデル (JA01)";
+                    sub.innerText = "夏期最適化制御（6〜8月・冷房26℃・PV余剰優先充電・損益分岐放電・自己診断付き）";
+                    btnS.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition bg-orange-500 text-white shadow";
+                    btnW.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white";
+                    kpiBar.className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 to-orange-600";
+
+                    document.getElementById('eco-winter-year-wrap').classList.add('hidden');
+                    document.getElementById('eco-summer-sample-wrap').classList.remove('hidden');
+                    document.getElementById('eco-snow-depth-wrap').classList.add('hidden');
+                    document.getElementById('eco-hvac-section-title').innerText = "建物・冷房設定（夏期：ISO 13790 RC回路）";
+                    document.getElementById('eco-target-temp-label').innerText = "冷房目標室温 (℃)";
+                    document.getElementById('eco-base-cop-label').innerText = "基準冷房COP (外気25℃以下)";
+                    document.getElementById('eco-metric-hvac-label').innerText = "冷房負荷 / 総需要";
+                    document.getElementById('eco-breakdown-chart-title').innerText = "④ 夏期3ヶ月の時間帯別コスト内訳比較（全項目合算＝実質合計）";
+                }
+            }
+
+            function updateWinterYearButtons() {
+                const cSel = document.getElementById('eco-winter-city');
+                const ySel = document.getElementById('eco-winter-year');
+                if (cSel) cSel.value = winterCity;
+                if (ySel) ySel.value = winterYear;
+            }
+
+            let ecoLoadSeq = 0;
+            async function loadWeatherForCurrentSeason() {
+                const mySeq = ++ecoLoadSeq;
+                activeDataWarning = '';
+                if (customWeatherBySeason[season]) {
+                    const cw = customWeatherBySeason[season];
+                    activeWeather = cw.data;
+                    activeDataLabel = cw.label;
+                    activeDataIsSample = false;
+                    activeDataWarning = cw.warning || '';
+                } else if (season === 'winter') {
+                    document.getElementById('eco-data-status').innerText = `読込中... (${winterCity} / ${winterYear}年冬)`;
+                    try {
+                        const parsed = await WeatherStore.loadDataset('winter', winterCity, winterYear);
+                        if (mySeq !== ecoLoadSeq) return false;
+                        activeWeather = parsed.data;
+                        activeDataLabel = parsed.label;
+                        activeCityLat = parsed.lat;
+                        activeCityName = parsed.cityName;
+                        activeDataIsSample = false;
+                        document.getElementById('eco-snow-is-depth').checked = false;
+                    } catch (err) {
+                        if (mySeq !== ecoLoadSeq) return false;
+                        activeDataLabel = `⚠️ 読込エラー: ${err.message}`;
+                        activeDataWarning = "ローカルで直接開いている場合はGitHub PagesまたはLive Server経由で開くか、下のCSV読み込みをご利用ください。";
+                        document.getElementById('eco-data-status').innerText = activeDataLabel;
+                        const wEl = document.getElementById('eco-data-warn');
+                        wEl.innerText = activeDataWarning;
+                        wEl.classList.remove('hidden');
+                        return false;
+                    }
+                } else {
+                    const sample = generateKushiroSummerSample();
+                    activeWeather = sample.data;
+                    activeDataLabel = sample.label;
+                    activeCityLat = 42.985;
+                    activeCityName = '釧路';
+                    activeDataIsSample = true;
+                }
+
+                // ステータス表示更新
+                document.getElementById('eco-data-status').innerText = `現在: ${activeDataLabel}`;
+                const badgeEl = document.getElementById('eco-data-badge');
+                if (activeDataIsSample) {
+                    badgeEl.innerText = "夏期代表モデル";
+                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800";
+                } else if (customWeatherBySeason[season]) {
+                    badgeEl.innerText = "CSV実測読込";
+                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800";
+                } else {
+                    badgeEl.innerText = "内蔵実測データ";
+                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+                }
+
+                const warnEl = document.getElementById('eco-data-warn');
+                if (activeDataWarning) {
+                    warnEl.innerText = activeDataWarning;
+                    warnEl.classList.remove('hidden');
+                } else {
+                    warnEl.classList.add('hidden');
+                }
+
+                // 週スライダー上限更新
+                const maxDays = Math.max(0, Math.floor(activeWeather.length / 24) - 7);
+                const weekSlider = document.getElementById('eco-week-start');
+                weekSlider.max = String(maxDays);
+                if (parseInt(weekSlider.value, 10) > maxDays) weekSlider.value = "0";
+
+                updateWinterYearButtons();
+                return true;
+            }
+
+            // =========================================================
+            // Python DF02 / JA01 忠実移植シミュレーションコア
+            // =========================================================
+            function runEconomySimulation() {
+                if (!activeWeather || activeWeather.length === 0) return;
+                const cfg = readConfigFromUI();
+                const isWinter = (season === 'winter');
+                const n = activeWeather.length;
+
+                // 1. 時間特徴量・ギャップ検出・TOU料金テーブル
+                const dtArr = new Array(n);
+                const tempArr = new Float64Array(n);
+                const snowArr = new Float64Array(n);
+                const sunArr = new Float64Array(n);
+                const radArr = new Float64Array(n);
+                const radMissing = new Uint8Array(n);
+                const isGap = new Uint8Array(n);
+                const hourArr = new Uint8Array(n);
+                const isWeekend = new Uint8Array(n);
+                const nextDayIsWeekend = new Uint8Array(n);
+                const touPeriod = new Array(n);
+                const buyPrices = new Float64Array(n);
+                const sellPrices = new Float64Array(n);
+
+                let radMax = 0.0;
+                for (let i = 0; i < n; i++) {
+                    const row = activeWeather[i];
+                    dtArr[i] = row.datetime;
+                    tempArr[i] = row.temp;
+                    snowArr[i] = Math.max(0.0, row.snow);
+                    sunArr[i] = Math.max(0.0, row.sunshine);
+                    const isMiss = row.solar_rad_is_missing || !Number.isFinite(row.solar_rad);
+                    radMissing[i] = isMiss ? 1 : 0;
+                    radArr[i] = isMiss ? 0.0 : Math.max(0.0, row.solar_rad);
+                    if (radArr[i] > radMax) radMax = radArr[i];
+
+                    if (i > 0) {
+                        const diffSec = (dtArr[i].getTime() - dtArr[i - 1].getTime()) / 1000.0;
+                        isGap[i] = (diffSec > 3600.0 * 2) ? 1 : 0;
+                    }
+
+                    const h = dtArr[i].getUTCHours();
+                    hourArr[i] = h;
+                    const dow = dtArr[i].getUTCDay(); // 0=Sun, 6=Sat
+                    isWeekend[i] = (dow === 0 || dow === 6) ? 1 : 0;
+
+                    const nextDt = new Date(dtArr[i].getTime() + (h >= 22 ? 86400000 : 0));
+                    const nextDow = nextDt.getUTCDay();
+                    nextDayIsWeekend[i] = (nextDow === 0 || nextDow === 6) ? 1 : 0;
+
+                    let p = 'day';
+                    let bp = cfg.price_day;
+                    if (h >= 22 || h < 8) { p = 'night'; bp = cfg.price_night; }
+                    else if (h >= 16 && h < 22) { p = 'peak'; bp = cfg.price_peak; }
+                    touPeriod[i] = p;
+                    buyPrices[i] = bp;
+                    sellPrices[i] = cfg.sell_price_fixed;
+                }
+
+                // 2. 太陽光発電モデル（方位角 ＋ FAO-56欠損補完 ＋ 温度補正 ＋ 冬期積雪滑落）
+                const lat = cfg.lat_deg * Math.PI / 180.0;
+                const tilt = cfg.tilt_deg * Math.PI / 180.0;
+                const az = cfg.azimuth_deg * Math.PI / 180.0;
+                const radColAllZero = (radMax <= 0.0);
+
+                const tiltedRad = new Float64Array(n);
+                const panelTemp = new Float64Array(n);
+                const pvGen = new Float64Array(n);
+                const panelSnow = new Float64Array(n);
+
+                for (let i = 0; i < n; i++) {
+                    const doy = getDayOfYearUTC(dtArr[i]);
+                    const hourExact = hourArr[i] + dtArr[i].getUTCMinutes() / 60.0;
+                    const delta = (23.45 * Math.sin(((360.0 / 365.0) * (284 + doy)) * Math.PI / 180.0)) * Math.PI / 180.0;
+                    const omega = ((hourExact - 12.0) * 15.0) * Math.PI / 180.0;
+
+                    const sin_h = Math.max(0.0, Math.min(1.0, Math.sin(lat) * Math.sin(delta) + Math.cos(lat) * Math.cos(delta) * Math.cos(omega)));
+                    const term1 = Math.sin(delta) * Math.sin(lat) * Math.cos(tilt);
+                    const term2 = -Math.sin(delta) * Math.cos(lat) * Math.sin(tilt) * Math.cos(az);
+                    const term3 = Math.cos(delta) * Math.cos(lat) * Math.cos(tilt) * Math.cos(omega);
+                    const term4 = Math.cos(delta) * Math.sin(lat) * Math.sin(tilt) * Math.cos(az) * Math.cos(omega);
+                    const term5 = Math.cos(delta) * Math.sin(tilt) * Math.sin(az) * Math.sin(omega);
+                    const cos_theta = Math.max(0.0, Math.min(1.0, term1 + term2 + term3 + term4 + term5));
+
+                    const sunClip = Math.max(0.0, Math.min(1.0, sunArr[i]));
+                    const estRad = (1.367 * sin_h) * (0.25 + 0.50 * sunClip);
+                    const useEst = (radMissing[i] === 1) || radColAllZero;
+                    const horizRad = useEst ? estRad : (radArr[i] / 3.6);
+
+                    const Rb = (sin_h > 0.0) ? Math.max(0.0, Math.min(3.0, cos_theta / Math.max(sin_h, 0.05))) : 0.0;
+                    const directRatio = sunClip;
+                    const diffuseRatio = 1.0 - directRatio;
+                    const tRad = horizRad * (directRatio * Rb + diffuseRatio * ((1.0 + Math.cos(tilt)) / 2.0));
+                    tiltedRad[i] = tRad;
+
+                    const G_w_m2 = tRad * 1000.0;
+                    const pTemp = tempArr[i] + (G_w_m2 / 800.0) * (cfg.panel_noct - 20.0);
+                    panelTemp[i] = pTemp;
+                    const KPT = Math.max(0.75, Math.min(1.15, 1.0 - cfg.panel_temp_coeff * (pTemp - 25.0)));
+                    const pvBase = cfg.pv_capacity_kW * tRad * cfg.pv_system_loss * KPT;
+
+                    if (isWinter) {
+                        let addedS = 0.0;
+                        if (cfg.snow_col_is_depth) {
+                            addedS = (i === 0 || isGap[i]) ? 0.0 : Math.max(0.0, snowArr[i] - snowArr[i - 1]);
+                        } else {
+                            addedS = Math.max(0.0, snowArr[i]);
+                        }
+                        const prevS = (i === 0 || isGap[i]) ? 0.0 : panelSnow[i - 1];
+                        let currS = prevS + addedS;
+                        if (tempArr[i] >= 2.0 || pTemp >= 5.0) currS = 0.0;
+                        else if (tempArr[i] >= 0.0) currS *= 0.5;
+                        else currS *= 0.9;
+                        panelSnow[i] = currS;
+
+                        const snowPenalty = (currS > 0.0) ? Math.exp(-0.3 * currS) : 1.0;
+                        pvGen[i] = pvBase * snowPenalty;
+                    } else {
+                        pvGen[i] = pvBase;
+                    }
+                }
+
+                // 3. 室温・生活電力モデル（ISO 13790 RC等価回路：冬期暖房 / 夏期冷房）
+                const lifestyleArr = new Float64Array(n);
+                const hvacArr = new Float64Array(n);
+                const roomTempArr = new Float64Array(n);
+                const totalDemandArr = new Float64Array(n);
+
+                const transLoss = cfg.u_value * cfg.envelope_area;
+                const ventLoss = cfg.air_volume * cfg.ach * 0.33;
+                const H_tr_base = (transLoss + ventLoss) / 1000.0;
+                const C_th = cfg.c_th;
+                const targetT = cfg.target_temp;
+
+                let T_in = isWinter ? targetT : Math.max(20.0, Math.min(targetT, tempArr[0]));
+
+                for (let i = 0; i < n; i++) {
+                    const life = isWeekend[i] ? WEEKEND_LIFESTYLE[hourArr[i]] : WEEKDAY_LIFESTYLE[hourArr[i]];
+                    lifestyleArr[i] = life;
+
+                    if (isGap[i]) {
+                        T_in = isWinter ? targetT : Math.max(20.0, Math.min(targetT, tempArr[i]));
+                    }
+
+                    const tempOut = tempArr[i];
+                    const internalHeat = 0.3 + life * 0.5;
+                    const solarGain = tiltedRad[i] * cfg.solar_gain_factor;
+
+                    let hvacPower = 0.0;
+                    if (isWinter) {
+                        const effHtr = (T_in > targetT + 2.0) ? H_tr_base * 3.0 : H_tr_base;
+                        const predT = T_in + (internalHeat + solarGain - effHtr * (T_in - tempOut)) / C_th;
+                        const effCOP = Math.max(1.8, cfg.base_cop - Math.max(0.0, (20.0 - tempOut) * 0.05));
+                        if (predT < targetT) {
+                            const reqHeat = (targetT - predT) * C_th;
+                            hvacPower = Math.max(0.0, Math.min(reqHeat / effCOP, cfg.max_hvac_kW));
+                        }
+                        T_in = predT + (hvacPower * effCOP) / C_th;
+                    } else {
+                        const predT = T_in + (internalHeat + solarGain - H_tr_base * (T_in - tempOut)) / C_th;
+                        const effCOP = Math.max(2.5, cfg.base_cop - Math.max(0.0, (tempOut - 25.0) * 0.08));
+                        if (predT > targetT) {
+                            const reqCool = (predT - targetT) * C_th;
+                            hvacPower = Math.max(0.0, Math.min(reqCool / effCOP, cfg.max_hvac_kW));
+                        }
+                        T_in = predT - (hvacPower * effCOP) / C_th;
+                    }
+
+                    hvacArr[i] = hvacPower;
+                    roomTempArr[i] = T_in;
+                    totalDemandArr[i] = hvacPower + life;
+                }
+
+                // 4. V2H経済性シミュレーション（厳密収支トラッキング）
+                let baseBatt = cfg.initial_soc_kWh;
+                let v2hBatt = cfg.initial_soc_kWh;
+                let v2hPvStored = 0.0;
+
+                const baseBattHist = new Float64Array(n);
+                const v2hBattHist = new Float64Array(n);
+                const v2hPvStoredHist = new Float64Array(n);
+                const effMaxCapHist = new Float64Array(n);
+                const effHist = new Float64Array(n);
+                const breakevenHist = new Float64Array(n);
+
+                const baseBuyHist = new Float64Array(n);
+                const baseSellHist = new Float64Array(n);
+                const baseCostHist = new Float64Array(n);
+                const baseGridChgHist = new Float64Array(n);
+                const baseTripHist = new Float64Array(n);
+
+                const v2hBuyHist = new Float64Array(n);
+                const v2hSellHist = new Float64Array(n);
+                const v2hCostHist = new Float64Array(n);
+                const v2hPvChgHist = new Float64Array(n);
+                const v2hGridChgHist = new Float64Array(n);
+                const v2hDisHist = new Float64Array(n);
+                const v2hTripHist = new Float64Array(n);
+                const standbyCostHist = new Float64Array(n);
+
+                let skippedDisHours = 0;
+                let baseShortCnt = 0, baseShortKWh = 0.0;
+                let v2hShortCnt = 0, v2hShortKWh = 0.0;
+
+                const maxCap = cfg.battery_max_kWh;
+                const maxChg = cfg.max_charge_kW;
+                const maxDis = cfg.max_discharge_kW;
+                const minRes = cfg.min_reserve_kWh;
+                const standby = cfg.v2h_standby_kW;
+
+                for (let i = 0; i < n; i++) {
+                    const temp = tempArr[i];
+                    const hour = hourArr[i];
+                    const wk = isWeekend[i] === 1;
+                    const nextWk = nextDayIsWeekend[i] === 1;
+                    const buyP = buyPrices[i];
+                    const sellP = sellPrices[i];
+
+                    const depH = wk ? 11 : 8;
+                    const retH = wk ? 15 : 18;
+                    const tripKWh = wk ? 6.0 : 10.0;
+                    const isEvHome = !(hour >= depH && hour < retH);
+
+                    if (hour === depH) {
+                        const actualBaseTrip = Math.min(baseBatt, tripKWh);
+                        if (actualBaseTrip < tripKWh - 1e-9) {
+                            baseShortCnt++;
+                            baseShortKWh += (tripKWh - actualBaseTrip);
+                        }
+                        baseBatt -= actualBaseTrip;
+                        baseTripHist[i] = actualBaseTrip;
+
+                        const actualV2hTrip = Math.min(v2hBatt, tripKWh);
+                        if (actualV2hTrip < tripKWh - 1e-9) {
+                            v2hShortCnt++;
+                            v2hShortKWh += (tripKWh - actualV2hTrip);
+                        }
+                        if (v2hBatt > 1e-9) {
+                            const pvShare = v2hPvStored / v2hBatt;
+                            v2hPvStored = Math.max(0.0, v2hPvStored - actualV2hTrip * pvShare);
+                        }
+                        v2hBatt -= actualV2hTrip;
+                        v2hTripHist[i] = actualV2hTrip;
+                    }
+
+                    const T_kelvin = temp + 273.15;
+                    const capRatio = Math.max(0.5, Math.min(1.0, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15))));
+                    const effMaxCap = maxCap * capRatio;
+                    const eff = Math.max(0.80, Math.min(0.95, 0.95 * capRatio));
+
+                    const breakevenNight = cfg.price_night / (eff * eff);
+                    const breakevenPv = cfg.sell_price_fixed / (eff * eff);
+
+                    effMaxCapHist[i] = effMaxCap;
+                    effHist[i] = eff;
+                    breakevenHist[i] = breakevenNight;
+
+                    // A. V2Hなし
+                    const netDemBase = totalDemandArr[i] - pvGen[i];
+                    let baseBuy = Math.max(netDemBase, 0.0);
+                    const baseSell = Math.max(-netDemBase, 0.0);
+
+                    if (isEvHome && (hour >= 22 || hour < 8)) {
+                        const space = Math.max(0.0, effMaxCap - baseBatt);
+                        if (space > 0.0) {
+                            const chg = Math.min(space, maxChg * eff);
+                            baseBatt += chg;
+                            baseGridChgHist[i] = chg;
+                            baseBuy += (chg / eff);
+                        }
+                    }
+
+                    baseBuyHist[i] = baseBuy;
+                    baseSellHist[i] = baseSell;
+                    baseCostHist[i] = (baseBuy * buyP) - (baseSell * sellP);
+                    baseBattHist[i] = baseBatt;
+
+                    // B. V2Hあり
+                    let netDemV2h = (totalDemandArr[i] + standby) - pvGen[i];
+                    let v2hBuy = 0.0;
+                    let v2hSell = 0.0;
+                    let usedChgAc = 0.0;
+
+                    if (isEvHome) {
+                        // Step 1: PV余剰優先充電
+                        if (netDemV2h < 0.0) {
+                            const excessPv = -netDemV2h;
+                            const space = Math.max(0.0, effMaxCap - v2hBatt);
+                            if (space > 0.0) {
+                                const chg = Math.min(excessPv * eff, maxChg * eff, space);
+                                v2hBatt += chg;
+                                v2hPvStored = Math.min(v2hBatt, v2hPvStored + chg);
+                                v2hPvChgHist[i] = chg;
+                                usedChgAc = chg / eff;
+                                v2hSell += Math.max(0.0, excessPv - usedChgAc);
+                            } else {
+                                v2hSell += excessPv;
+                            }
+                            netDemV2h = 0.0;
+                        } else {
+                            // Step 2: 8時〜22時 損益分岐最適放電
+                            if (hour >= 8 && hour < 22) {
+                                const availTotal = Math.max(0.0, v2hBatt - minRes);
+                                if (availTotal > 0.0) {
+                                    let allowedDis = 0.0;
+                                    if (!cfg.use_breakeven_control) {
+                                        allowedDis = availTotal;
+                                    } else if (buyP >= (breakevenNight + cfg.breakeven_margin_yen)) {
+                                        allowedDis = availTotal;
+                                    } else {
+                                        if (v2hPvStored > 1e-9 && buyP >= breakevenPv) {
+                                            allowedDis = Math.min(availTotal, v2hPvStored);
+                                        } else {
+                                            allowedDis = 0.0;
+                                            skippedDisHours++;
+                                        }
+                                    }
+
+                                    if (allowedDis > 0.0) {
+                                        const dis = Math.min(netDemV2h / eff, allowedDis, maxDis);
+                                        v2hBatt -= dis;
+                                        v2hPvStored = Math.max(0.0, v2hPvStored - dis);
+                                        v2hDisHist[i] = dis;
+                                        netDemV2h = Math.max(0.0, netDemV2h - (dis * eff));
+                                    }
+                                }
+                            }
+                            v2hBuy += Math.max(netDemV2h, 0.0);
+                        }
+
+                        // Step 3: 夜間割安時間帯（22〜翌8時）タイマー系統充電
+                        if (hour >= 22 || hour < 8) {
+                            const nextRatio = nextWk ? cfg.night_target_weekend : cfg.night_target_weekday;
+                            const targetSoc = effMaxCap * nextRatio;
+                            const space = Math.max(0.0, targetSoc - v2hBatt);
+                            const remChgAc = Math.max(0.0, maxChg - usedChgAc);
+                            if (space > 0.0 && remChgAc > 0.0) {
+                                const chg = Math.min(space, remChgAc * eff);
+                                v2hBatt += chg;
+                                v2hGridChgHist[i] = chg;
+                                v2hBuy += (chg / eff);
+                            }
+                        }
+                    } else {
+                        v2hBuy += Math.max(netDemV2h, 0.0);
+                        v2hSell += Math.max(-netDemV2h, 0.0);
+                    }
+
+                    if (v2hBuy > 1e-9) standbyCostHist[i] = standby * buyP;
+                    else if (v2hSell > 1e-9) standbyCostHist[i] = standby * sellP;
+                    else if (v2hDisHist[i] > 1e-9) standbyCostHist[i] = standby * breakevenNight;
+                    else standbyCostHist[i] = standby * sellP;
+
+                    v2hBuyHist[i] = v2hBuy;
+                    v2hSellHist[i] = v2hSell;
+                    v2hCostHist[i] = (v2hBuy * buyP) - (v2hSell * sellP);
+                    v2hBattHist[i] = v2hBatt;
+                    v2hPvStoredHist[i] = v2hPvStored;
+                }
+
+                // 5. デバッグ自己診断（Python run_debug_checks 厳密再現）
+                const tol = 1e-5;
+                let sumBaseGridChg = 0, sumBaseTrip = 0;
+                let sumV2hPvChg = 0, sumV2hGridChg = 0, sumV2hDis = 0, sumV2hTrip = 0;
+                let baseAcMaxErr = 0, v2hAcMaxErr = 0;
+                let chgOverCnt = 0, disOverCnt = 0;
+                let simulBase = 0, simulV2h = 0;
+                let socOob = 0, pvTrackErr = 0, nanInfCnt = 0;
+                let baseRecomp = 0, v2hRecomp = 0, totalBase = 0, totalV2h = 0;
+                let sumEff = 0, sumPv = 0, sumHvac = 0, sumDemand = 0;
+                let sumBaseSell = 0, sumV2hSell = 0, sumStandbyCost = 0;
+                let sumTemp = 0, minTemp = Infinity, maxTemp = -Infinity;
+
+                const breakdown = {
+                    night: { baseKWh: 0, v2hKWh: 0, baseYen: 0, v2hYen: 0 },
+                    day:   { baseKWh: 0, v2hKWh: 0, baseYen: 0, v2hYen: 0 },
+                    peak:  { baseKWh: 0, v2hKWh: 0, baseYen: 0, v2hYen: 0 }
+                };
+                let baseSellYen = 0, v2hSellYen = 0;
+
+                for (let i = 0; i < n; i++) {
+                    sumBaseGridChg += baseGridChgHist[i];
+                    sumBaseTrip += baseTripHist[i];
+                    sumV2hPvChg += v2hPvChgHist[i];
+                    sumV2hGridChg += v2hGridChgHist[i];
+                    sumV2hDis += v2hDisHist[i];
+                    sumV2hTrip += v2hTripHist[i];
+
+                    const bLhs = baseBuyHist[i] - baseSellHist[i];
+                    const bRhs = (totalDemandArr[i] - pvGen[i]) + (baseGridChgHist[i] / effHist[i]);
+                    baseAcMaxErr = Math.max(baseAcMaxErr, Math.abs(bLhs - bRhs));
+
+                    const vLhs = v2hBuyHist[i] - v2hSellHist[i];
+                    const vRhs = (totalDemandArr[i] + standby - pvGen[i])
+                        + ((v2hPvChgHist[i] + v2hGridChgHist[i]) / effHist[i])
+                        - (v2hDisHist[i] * effHist[i]);
+                    v2hAcMaxErr = Math.max(v2hAcMaxErr, Math.abs(vLhs - vRhs));
+
+                    const totChgAc = (v2hPvChgHist[i] + v2hGridChgHist[i]) / effHist[i];
+                    if (totChgAc > maxChg + tol) chgOverCnt++;
+                    if (v2hDisHist[i] > maxDis + tol) disOverCnt++;
+
+                    if (baseBuyHist[i] > tol && baseSellHist[i] > tol) simulBase++;
+                    if (v2hBuyHist[i] > tol && v2hSellHist[i] > tol) simulV2h++;
+                    if (baseBattHist[i] < -tol || baseBattHist[i] > maxCap + tol) socOob++;
+                    if (v2hBattHist[i] < -tol || v2hBattHist[i] > maxCap + tol) socOob++;
+                    if (v2hPvStoredHist[i] < -tol || v2hPvStoredHist[i] > v2hBattHist[i] + tol) pvTrackErr++;
+
+                    const checkVals = [baseBattHist[i], v2hBattHist[i], baseCostHist[i], v2hCostHist[i], pvGen[i], totalDemandArr[i]];
+                    for (let k = 0; k < checkVals.length; k++) {
+                        if (!Number.isFinite(checkVals[k])) nanInfCnt++;
+                    }
+
+                    baseRecomp += baseBuyHist[i] * buyPrices[i] - baseSellHist[i] * sellPrices[i];
+                    v2hRecomp += v2hBuyHist[i] * buyPrices[i] - v2hSellHist[i] * sellPrices[i];
+                    totalBase += baseCostHist[i];
+                    totalV2h += v2hCostHist[i];
+
+                    sumEff += effHist[i];
+                    sumPv += pvGen[i];
+                    sumHvac += hvacArr[i];
+                    sumDemand += totalDemandArr[i];
+                    sumBaseSell += baseSellHist[i];
+                    sumV2hSell += v2hSellHist[i];
+                    baseSellYen += baseSellHist[i] * sellPrices[i];
+                    v2hSellYen += v2hSellHist[i] * sellPrices[i];
+                    sumStandbyCost += standbyCostHist[i];
+
+                    const t = tempArr[i];
+                    sumTemp += t;
+                    if (t < minTemp) minTemp = t;
+                    if (t > maxTemp) maxTemp = t;
+
+                    const bd = breakdown[touPeriod[i]];
+                    bd.baseKWh += baseBuyHist[i];
+                    bd.v2hKWh += v2hBuyHist[i];
+                    bd.baseYen += baseBuyHist[i] * buyPrices[i];
+                    bd.v2hYen += v2hBuyHist[i] * buyPrices[i];
+                }
+
+                const baseDcErr = Math.abs((baseBatt - cfg.initial_soc_kWh) - (sumBaseGridChg - sumBaseTrip));
+                const v2hDcErr = Math.abs((v2hBatt - cfg.initial_soc_kWh) - (sumV2hPvChg + sumV2hGridChg - sumV2hDis - sumV2hTrip));
+                const costErr = Math.max(Math.abs(baseRecomp - totalBase), Math.abs(v2hRecomp - totalV2h));
+                const allOk = (
+                    baseDcErr < tol && v2hDcErr < tol &&
+                    baseAcMaxErr < tol && v2hAcMaxErr < tol &&
+                    chgOverCnt === 0 && disOverCnt === 0 &&
+                    nanInfCnt === 0 && costErr < tol &&
+                    simulBase === 0 && simulV2h === 0 &&
+                    socOob === 0 && pvTrackErr === 0
+                );
+
+                // 6. 集計メトリクス
+                const meanEff = sumEff / n;
+                const socDiff = baseBatt - v2hBatt;
+                const socAdjYen = (socDiff / meanEff) * cfg.price_night;
+                const adjV2hCost = totalV2h + socAdjYen;
+                const adjSaving = totalBase - adjV2hCost;
+                const adjRate = Math.abs(totalBase) > 1e-9 ? (adjSaving / totalBase * 100.0) : 0.0;
+
+                const baseSelfCons = sumPv > 0 ? ((sumPv - sumBaseSell) / sumPv * 100.0) : 0.0;
+                const v2hSelfCons = sumPv > 0 ? ((sumPv - sumV2hSell) / sumPv * 100.0) : 0.0;
+                const standbyKWh = standby * n;
+                const v2hCycles = sumV2hDis / maxCap;
+                const totalCycles = (sumV2hDis + sumV2hTrip) / maxCap;
+
+                lastResult = {
+                    cfg, isWinter, n,
+                    dtArr, tempArr, buyPrices, sellPrices, breakevenHist,
+                    effMaxCapHist, baseBattHist, v2hBattHist,
+                    baseCostHist, v2hCostHist,
+                    totalDemandArr, pvGen, v2hPvChgHist, v2hGridChgHist, v2hDisHist, effHist,
+                    breakdown, baseSellYen, v2hSellYen, sumBaseSell, sumV2hSell,
+                    totalBase, totalV2h, socAdjYen, adjV2hCost, adjSaving, adjRate,
+                    baseBatt, v2hBatt, meanEff,
+                    sumPv, sumHvac, sumDemand, baseSelfCons, v2hSelfCons,
+                    sumV2hPvChg, sumV2hDis, v2hCycles, totalCycles,
+                    standbyKWh, sumStandbyCost, skippedDisHours,
+                    avgTemp: sumTemp / n, minTemp, maxTemp,
+                    debug: {
+                        allOk, baseDcErr, v2hDcErr, baseAcMaxErr, v2hAcMaxErr,
+                        chgOverCnt, disOverCnt, nanInfCnt, costErr,
+                        simulBase, simulV2h, socOob, pvTrackErr,
+                        baseShortCnt, baseShortKWh, v2hShortCnt, v2hShortKWh
+                    }
+                };
+
+                renderEconomyUI(lastResult);
+            }
+
+            function renderEconomyUI(res) {
+                const sLabel = res.isWinter ? "冬期3ヶ月" : "夏期3ヶ月";
+                document.getElementById('eco-result-title').innerText =
+                    res.isWinter
+                        ? `🏆 ${activeCityName}V2H 経済性シミュレーション結果（冬期・寒冷地最適化制御）`
+                        : "🏆 釧路V2H 経済性シミュレーション結果（夏期・最適化制御）";
+
+                document.getElementById('eco-period-info').innerText =
+                    `対象期間: ${fmtDateFull(res.dtArr[0])} 〜 ${fmtDateFull(res.dtArr[res.n - 1])} (${res.n.toLocaleString()}時間)`;
+                document.getElementById('eco-temp-stats').innerText =
+                    `平均 ${res.avgTemp.toFixed(1)}℃ / 最高 ${res.maxTemp.toFixed(1)}℃ / 最低 ${res.minTemp.toFixed(1)}℃`;
+
+                document.getElementById('eco-kpi-base').innerText = `${fmtYen(res.totalBase)} 円`;
+                document.getElementById('eco-kpi-v2h').innerText = `${fmtYen(res.adjV2hCost)} 円`;
+                document.getElementById('eco-kpi-v2h-sub').innerText =
+                    `表面 ${fmtYen(res.totalV2h)}円 / SOC清算 ${res.socAdjYen >= 0 ? '+' : ''}${fmtYen(res.socAdjYen)}円`;
+
+                const savingEl = document.getElementById('eco-kpi-saving');
+                savingEl.innerText = `${res.adjSaving >= 0 ? '' : ''}${fmtYen(res.adjSaving)} 円`;
+                document.getElementById('eco-kpi-rate').innerText = `${sLabel} ${res.adjRate.toFixed(1)}% 削減`;
+
+                document.getElementById('eco-kpi-selfcons').innerText = `${res.v2hSelfCons.toFixed(1)}%`;
+                document.getElementById('eco-kpi-selfcons-sub').innerText =
+                    `なし ${res.baseSelfCons.toFixed(1)}% → あり ${res.v2hSelfCons.toFixed(1)}% (発電 ${res.sumPv.toFixed(0)}kWh)`;
+
+                document.getElementById('eco-metric-hvac').innerText =
+                    `${res.sumHvac.toFixed(1)} / ${res.sumDemand.toFixed(1)} kWh`;
+                document.getElementById('eco-metric-pvchg').innerText =
+                    `${res.sumV2hPvChg.toFixed(1)} kWh (DC)`;
+                document.getElementById('eco-metric-cycles').innerText =
+                    `${res.sumV2hDis.toFixed(0)} kWh / ${res.v2hCycles.toFixed(1)}回 (計${res.totalCycles.toFixed(1)})`;
+                document.getElementById('eco-metric-skip').innerText =
+                    `${res.skippedDisHours}時間 / ${(res.meanEff * 100).toFixed(1)}%`;
+                document.getElementById('eco-standby-note').innerText =
+                    `V2H待機電力ロス: ${res.standbyKWh.toFixed(1)} kWh (実質約 ${fmtYen(res.sumStandbyCost)} 円)`;
+
+                // デバッグ自己診断
+                const dbg = res.debug;
+                const dBadge = document.getElementById('eco-debug-badge');
+                if (dbg.allOk) {
+                    dBadge.innerText = "✅ ALL PASSED";
+                    dBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+                } else {
+                    dBadge.innerText = "❌ ERROR DETECTED";
+                    dBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-100 text-red-800";
+                }
+                document.getElementById('eco-debug-body').innerHTML = `
+                    <div>DC保存則誤差 : なし ${dbg.baseDcErr.toExponential(1)} / あり ${dbg.v2hDcErr.toExponential(1)} kWh</div>
+                    <div>AC収支最大誤差: なし ${dbg.baseAcMaxErr.toExponential(1)} / あり ${dbg.v2hAcMaxErr.toExponential(1)} kW</div>
+                    <div>定格超過件数 : 充電 ${dbg.chgOverCnt}件 / 放電 ${dbg.disOverCnt}件</div>
+                    <div>NaN/Inf・検算 : ${dbg.nanInfCnt}件 / ${dbg.costErr.toExponential(1)} 円</div>
+                    <div>同時売買/逸脱 : ${dbg.simulBase + dbg.simulV2h}件 / SOC:${dbg.socOob} / PV:${dbg.pvTrackErr}</div>
+                    <div>EV走行電欠   : なし ${dbg.baseShortCnt}回(${dbg.baseShortKWh.toFixed(1)}kWh) / あり ${dbg.v2hShortCnt}回(${dbg.v2hShortKWh.toFixed(1)}kWh)</div>
+                `;
+
+                // 時間帯別内訳テーブル
+                const rows = [
+                    { name: '夜間買電 (22-8時)', bK: res.breakdown.night.baseKWh, bY: res.breakdown.night.baseYen, vK: res.breakdown.night.v2hKWh, vY: res.breakdown.night.v2hYen },
+                    { name: '昼間買電 (8-16時)', bK: res.breakdown.day.baseKWh, bY: res.breakdown.day.baseYen, vK: res.breakdown.day.v2hKWh, vY: res.breakdown.day.v2hYen },
+                    { name: '夕方ピーク (16-22時)', bK: res.breakdown.peak.baseKWh, bY: res.breakdown.peak.baseYen, vK: res.breakdown.peak.v2hKWh, vY: res.breakdown.peak.v2hYen },
+                    { name: '売電収入 (控除)', bK: res.sumBaseSell, bY: -res.baseSellYen, vK: res.sumV2hSell, vY: -res.v2hSellYen },
+                    { name: `期末SOC清算 (なし${res.baseBatt.toFixed(1)} vs あり${res.v2hBatt.toFixed(1)}kWh)`, bK: null, bY: 0, vK: null, vY: res.socAdjYen },
+                    { name: '実質合計（SOC補正後）', bK: null, bY: res.totalBase, vK: null, vY: res.adjV2hCost, bold: true }
+                ];
+
+                const tbody = document.getElementById('eco-breakdown-tbody');
+                tbody.innerHTML = rows.map(r => {
+                    const diff = r.vY - r.bY;
+                    const diffClass = diff < 0 ? 'text-emerald-700 font-bold' : (diff > 0 ? 'text-rose-600 font-semibold' : 'text-slate-500');
+                    const trClass = r.bold ? 'bg-slate-50 font-extrabold text-slate-900 border-t-2 border-slate-300' : 'text-slate-700 hover:bg-slate-50/60';
+                    return `<tr class="${trClass}">
+                        <td class="py-2 px-3 text-left">${r.name}</td>
+                        <td class="py-2 px-3">${r.bK !== null ? r.bK.toFixed(1) : '-'}</td>
+                        <td class="py-2 px-3">${fmtYen(r.bY)}</td>
+                        <td class="py-2 px-3">${r.vK !== null ? r.vK.toFixed(1) : '-'}</td>
+                        <td class="py-2 px-3">${fmtYen(r.vY)}</td>
+                        <td class="py-2 px-3 ${diffClass}">${diff >= 0 ? '+' : ''}${fmtYen(diff)}</td>
+                    </tr>`;
+                }).join('');
+
+                renderEconomyCharts(res);
+            }
+
+            function renderEconomyCharts(res) {
+                const startDay = parseInt(document.getElementById('eco-week-start').value, 10) || 0;
+                const startIdx = Math.min(startDay * 24, Math.max(0, res.n - 24));
+                const plotLen = Math.min(24 * 7, res.n - startIdx);
+                const endIdx = startIdx + plotLen;
+
+                document.getElementById('eco-week-label').innerText =
+                    `${fmtDateShort(res.dtArr[startIdx])} 〜 ${fmtDateShort(res.dtArr[endIdx - 1])}`;
+
+                const labels = [];
+                const buyP = [], breakP = [], sellP = [];
+                const effCap = [], baseBat = [], v2hBat = [], minResLine = [], tempOut = [];
+                const baseCum = [], v2hCum = [];
+                const demandPlot = [], pvPlot = [], disAcPlot = [], gridChgNeg = [], pvChgNeg = [];
+
+                let bSum = 0, vSum = 0;
+                for (let i = startIdx; i < endIdx; i++) {
+                    labels.push(fmtDateShort(res.dtArr[i]));
+                    buyP.push(res.buyPrices[i]);
+                    breakP.push(res.breakevenHist[i]);
+                    sellP.push(res.sellPrices[i]);
+
+                    effCap.push(res.effMaxCapHist[i]);
+                    baseBat.push(res.baseBattHist[i]);
+                    v2hBat.push(res.v2hBattHist[i]);
+                    minResLine.push(res.cfg.min_reserve_kWh);
+                    tempOut.push(res.tempArr[i]);
+
+                    bSum += res.baseCostHist[i];
+                    vSum += res.v2hCostHist[i];
+                    baseCum.push(bSum);
+                    v2hCum.push(vSum);
+
+                    demandPlot.push(res.totalDemandArr[i]);
+                    pvPlot.push(res.pvGen[i]);
+                    disAcPlot.push(res.v2hDisHist[i] * res.effHist[i]);
+                    gridChgNeg.push(-(res.v2hGridChgHist[i] / res.effHist[i]));
+                    pvChgNeg.push(-(res.v2hPvChgHist[i] / res.effHist[i]));
+                }
+
+                // Helper to create or update Chart
+                function upsertChart(key, canvasId, config) {
+                    if (charts[key]) {
+                        charts[key].destroy();
+                    }
+                    const ctx = document.getElementById(canvasId).getContext('2d');
+                    charts[key] = new Chart(ctx, config);
+                }
+
+                // ① 価格 & 損益分岐単価
+                upsertChart('price', 'ecoChartPrice', {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: '買電単価', data: buyP, borderColor: '#dc2626', borderWidth: 1.8, stepped: true, pointRadius: 0 },
+                            { label: `放電損益分岐 (${res.cfg.price_night}円÷η²)`, data: breakP, borderColor: '#0d9488', borderWidth: 1.6, borderDash: [6, 3], pointRadius: 0 },
+                            { label: '売電単価', data: sellP, borderColor: '#2563eb', borderWidth: 1.4, borderDash: [4, 4], pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 7, font: { size: 10 } } },
+                            y: { min: 0, max: Math.max(res.cfg.price_peak + 14, 56), title: { display: true, text: '円/kWh', font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // ② EVバッテリー残量・実効上限・外気温
+                const v2hLabel = res.isWinter
+                    ? `V2Hあり(${Math.round(res.cfg.night_target_weekday*100)}%/${Math.round(res.cfg.night_target_weekend*100)}%)`
+                    : `V2Hあり(平日${Math.round(res.cfg.night_target_weekday*100)}%/休日${Math.round(res.cfg.night_target_weekend*100)}%)`;
+
+                upsertChart('soc', 'ecoChartSoc', {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: '実効充電上限', data: effCap, borderColor: '#4169e1', borderWidth: 1.3, borderDash: [2, 2], yAxisID: 'y', pointRadius: 0 },
+                            { label: 'V2Hなし', data: baseBat, borderColor: '#64748b', borderWidth: 1.4, borderDash: [5, 3], yAxisID: 'y', pointRadius: 0 },
+                            { label: v2hLabel, data: v2hBat, borderColor: '#16a34a', borderWidth: 2.0, yAxisID: 'y', pointRadius: 0 },
+                            { label: `備蓄下限(${res.cfg.min_reserve_kWh}kWh)`, data: minResLine, borderColor: '#ef4444', borderWidth: 1.2, borderDash: [3, 3], yAxisID: 'y', pointRadius: 0 },
+                            { label: '外気温(右軸)', data: tempOut, borderColor: '#9333ea', borderWidth: 1.1, borderDash: [4, 2], yAxisID: 'y1', pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { labels: { boxWidth: 12, font: { size: 10 } } } },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 7, font: { size: 10 } } },
+                            y: { position: 'left', min: 0, max: res.cfg.battery_max_kWh + 10, title: { display: true, text: '残量 (kWh)', font: { size: 10 } } },
+                            y1: { position: 'right', title: { display: true, text: '外気温 (℃)', font: { size: 10 }, color: '#9333ea' }, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+
+                // ③ 累積電気代比較
+                upsertChart('cum', 'ecoChartCum', {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: 'V2Hなし（普通の家）', data: baseCum, borderColor: '#64748b', borderWidth: 1.8, borderDash: [5, 3], pointRadius: 0, fill: false },
+                            { label: 'V2Hあり（改良制御）', data: v2hCum, borderColor: '#ea580c', backgroundColor: 'rgba(250, 204, 21, 0.25)', borderWidth: 2.2, pointRadius: 0, fill: '-1' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { boxWidth: 12, font: { size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.dataset.label}: ${fmtYen(ctx.parsed.y)} 円`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 7, font: { size: 10 } } },
+                            y: { title: { display: true, text: '累積電気代 (円)', font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // ④ 3ヶ月コスト内訳棒グラフ
+                upsertChart('breakdown', 'ecoChartBreakdown', {
+                    type: 'bar',
+                    data: {
+                        labels: ['夜間買電\n(22-8時)', '昼間買電\n(8-16時)', '夕方ピーク\n(16-22時)', '売電収入\n(控除)', '期末SOC\n清算', '実質合計\n(補正後)'],
+                        datasets: [
+                            {
+                                label: 'V2Hなし（普通の家）',
+                                data: [
+                                    res.breakdown.night.baseYen,
+                                    res.breakdown.day.baseYen,
+                                    res.breakdown.peak.baseYen,
+                                    -res.baseSellYen,
+                                    0,
+                                    res.totalBase
+                                ],
+                                backgroundColor: 'rgba(100, 116, 139, 0.82)',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'V2Hあり（改良制御）',
+                                data: [
+                                    res.breakdown.night.v2hYen,
+                                    res.breakdown.day.v2hYen,
+                                    res.breakdown.peak.v2hYen,
+                                    -res.v2hSellYen,
+                                    res.socAdjYen,
+                                    res.adjV2hCost
+                                ],
+                                backgroundColor: 'rgba(234, 88, 12, 0.88)',
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, animation: false,
+                        plugins: {
+                            legend: { labels: { boxWidth: 12, font: { size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.dataset.label}: ${fmtYen(ctx.parsed.y)} 円`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { font: { size: 10 } } },
+                            y: { title: { display: true, text: '金額 (円)', font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // ⑤ 1週間のエネルギー収支（複合グラフ：需要線＋PV面＋放電/充電バー）
+                upsertChart('balance', 'ecoChartBalance', {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            { type: 'line', label: '家庭総需要', data: demandPlot, borderColor: '#0f172a', borderWidth: 1.5, pointRadius: 0, order: 1 },
+                            { type: 'line', label: 'PV発電量', data: pvPlot, borderColor: '#eab308', backgroundColor: 'rgba(250, 204, 21, 0.35)', borderWidth: 1.2, fill: true, pointRadius: 0, order: 2 },
+                            { type: 'bar', label: 'V2H放電', data: disAcPlot, backgroundColor: 'rgba(34, 197, 94, 0.82)', stack: 'pos', barPercentage: 1.0, categoryPercentage: 0.9, order: 3 },
+                            { type: 'bar', label: '夜間系統充電', data: gridChgNeg, backgroundColor: 'rgba(30, 144, 255, 0.72)', stack: 'neg', barPercentage: 1.0, categoryPercentage: 0.9, order: 4 },
+                            { type: 'bar', label: 'PV余剰充電', data: pvChgNeg, backgroundColor: 'rgba(249, 115, 22, 0.85)', stack: 'neg', barPercentage: 1.0, categoryPercentage: 0.9, order: 5 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { boxWidth: 12, font: { size: 10 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} kW`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true, ticks: { maxTicksLimit: 7, font: { size: 10 } } },
+                            y: { stacked: true, title: { display: true, text: '電力 (kW)', font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+
+            // 経済シミュレーション用 CSV 読み込み（DF02 / JA01 準拠＋列自動検出＋列ズレ警告）
+            function handleEcoCsvUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const buffer = evt.target.result;
+                    let text = "";
+                    try {
+                        text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+                    } catch (_) {
+                        text = new TextDecoder('shift_jis').decode(buffer);
+                    }
+                    text = text.replace(/^\uFEFF/, '');
+                    const lines = text.split(/\r?\n/);
+
+                    // ヘッダー自動検出（失敗時は Python DF02/JA01 の列インデックスへフォールバック）
+                    let tempCol = 1;
+                    let snowCol = (season === 'winter') ? 4 : 12;
+                    let sunCol  = (season === 'winter') ? 9 : 4;
+                    let radCol  = (season === 'winter') ? 12 : 9;
+                    let detectedSnowIsDepth = (season === 'winter');
+
+                    for (let i = 0; i < Math.min(10, lines.length); i++) {
+                        if (lines[i].includes('気温') && (lines[i].includes('日照') || lines[i].includes('日射') || lines[i].includes('積雪') || lines[i].includes('降雪'))) {
+                            const hCols = lines[i].split(',');
+                            const sub1 = (i + 1 < lines.length) ? lines[i + 1].split(',') : [];
+                            const sub2 = (i + 2 < lines.length) ? lines[i + 2].split(',') : [];
+                            let fT = false, fSn = false, fSu = false, fR = false;
+                            for (let c = 1; c < hCols.length; c++) {
+                                const hName = hCols[c].trim();
+                                const sName = ((sub1[c] || '') + ' ' + (sub2[c] || '')).trim();
+                                if (sName.includes('品質') || sName.includes('均質') || sName.includes('現象')) continue;
+                                if (hName.includes('気温') && !fT) { tempCol = c; fT = true; }
+                                else if ((hName.includes('積雪') || hName.includes('降雪')) && !fSn) {
+                                    snowCol = c; fSn = true;
+                                    detectedSnowIsDepth = hName.includes('積雪');
+                                }
+                                else if (hName.includes('日照') && !fSu) { sunCol = c; fSu = true; }
+                                else if (hName.includes('日射') && !fR) { radCol = c; fR = true; }
+                            }
+                            break;
+                        }
+                    }
+
+                    const raw = [];
+                    let converted24h = 0;
+                    for (let i = 0; i < lines.length; i++) {
+                        const cols = lines[i].split(',');
+                        if (cols.length < 5) continue;
+                        const { dt, is24h } = parseJmaDateTimeUTC(cols[0]);
+                        if (!dt) continue;
+                        if (is24h) converted24h++;
+
+                        const temp = parseJmaNumberCommon(cols[tempCol]);
+                        const snow = (cols.length > snowCol) ? parseJmaNumberCommon(cols[snowCol]) : NaN;
+                        const sun  = (cols.length > sunCol) ? parseJmaNumberCommon(cols[sunCol]) : NaN;
+                        const rad  = (cols.length > radCol) ? parseJmaNumberCommon(cols[radCol]) : NaN;
+
+                        raw.push({
+                            datetime: dt,
+                            temp: temp,
+                            snow: Number.isFinite(snow) ? Math.max(0.0, snow) : 0.0,
+                            sunshine: Number.isFinite(sun) ? Math.max(0.0, sun) : 0.0,
+                            solar_rad: Number.isFinite(rad) ? Math.max(0.0, rad) : NaN,
+                            solar_rad_is_missing: !Number.isFinite(rad)
+                        });
+                    }
+
+                    if (raw.length === 0) {
+                        alert(`エラー: ${file.name} から有効な気象データを読み取れませんでした。`);
+                        return;
+                    }
+
+                    // ソート＆重複除去＆気温ffill/bfill
+                    raw.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+                    const dedup = [];
+                    let lastMs = -1;
+                    for (let i = 0; i < raw.length; i++) {
+                        const ms = raw[i].datetime.getTime();
+                        if (ms === lastMs) continue;
+                        lastMs = ms;
+                        dedup.push(raw[i]);
+                    }
+                    let lastValidTemp = NaN;
+                    for (let i = 0; i < dedup.length; i++) {
+                        if (Number.isFinite(dedup[i].temp)) lastValidTemp = dedup[i].temp;
+                        else if (Number.isFinite(lastValidTemp)) dedup[i].temp = lastValidTemp;
+                    }
+                    let nextValidTemp = 0.0;
+                    for (let i = dedup.length - 1; i >= 0; i--) {
+                        if (Number.isFinite(dedup[i].temp)) nextValidTemp = dedup[i].temp;
+                        else dedup[i].temp = nextValidTemp;
+                    }
+
+                    // 季節抽出（冬: 12,1,2月 / 夏: 6,7,8月）
+                    const targetMonths = (season === 'winter') ? [11, 0, 1] : [5, 6, 7];
+                    let filtered = dedup.filter(r => targetMonths.includes(r.datetime.getUTCMonth()));
+                    let warn = '';
+                    if (filtered.length === 0) {
+                        filtered = dedup;
+                        warn = `⚠️ ${season === 'winter' ? '冬期(12-2月)' : '夏期(6-8月)'}の行が見つからなかったため全期間(${dedup.length}時間)を使用します。`;
+                    } else {
+                        // 夏期の列ズレサニティチェック
+                        if (season === 'summer') {
+                            let sunMax = 0, radMax = 0, snowMax = 0;
+                            for (const r of filtered) {
+                                if (r.sunshine > sunMax) sunMax = r.sunshine;
+                                if (Number.isFinite(r.solar_rad) && r.solar_rad > radMax) radMax = r.solar_rad;
+                                if (r.snow > snowMax) snowMax = r.snow;
+                            }
+                            if (sunMax > 1.05 || radMax > 5.0 || snowMax > 0.0) {
+                                warn = `⚠️ 列チェック警告: 日照最大${sunMax.toFixed(2)}h / 日射最大${radMax.toFixed(2)}MJ/m² / 積雪最大${snowMax.toFixed(2)}（CSV列順をご確認ください）`;
+                            }
+                        }
+                    }
+
+                    if (season === 'winter') {
+                        document.getElementById('eco-snow-is-depth').checked = detectedSnowIsDepth;
+                    }
+
+                    customWeatherBySeason[season] = {
+                        label: `${file.name} (${filtered.length}時間 / 24:00変換:${converted24h}件)`,
+                        data: filtered,
+                        warning: warn
+                    };
+                    loadWeatherForCurrentSeason().then(ok => { if (ok) runEconomySimulation(); });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            async function setSeason(newSeason) {
+                season = (newSeason === 'summer') ? 'summer' : 'winter';
+                document.getElementById('eco-csv-input').value = '';
+                updateSeasonThemeUI();
+                applySeasonDefaultsToUI(season);
+                const ok = await loadWeatherForCurrentSeason();
+                if (ok) runEconomySimulation();
+            }
+
+            function init(initialSeason) {
+                document.getElementById('eco-btn-winter').addEventListener('click', () => setSeason('winter'));
+                document.getElementById('eco-btn-summer').addEventListener('click', () => setSeason('summer'));
+
+                document.getElementById('eco-winter-city').addEventListener('change', async (e) => {
+                    winterCity = e.target.value;
+                    customWeatherBySeason.winter = null;
+                    document.getElementById('eco-csv-input').value = '';
+                    const ok = await loadWeatherForCurrentSeason();
+                    if (ok) runEconomySimulation();
+                });
+                document.getElementById('eco-winter-year').addEventListener('change', async (e) => {
+                    winterYear = e.target.value;
+                    customWeatherBySeason.winter = null;
+                    document.getElementById('eco-csv-input').value = '';
+                    const ok = await loadWeatherForCurrentSeason();
+                    if (ok) runEconomySimulation();
+                });
+                document.getElementById('eco-btn-summer-builtin').addEventListener('click', async () => {
+                    customWeatherBySeason.summer = null;
+                    document.getElementById('eco-csv-input').value = '';
+                    const ok = await loadWeatherForCurrentSeason();
+                    if (ok) runEconomySimulation();
+                });
+
+                document.getElementById('eco-csv-input').addEventListener('change', handleEcoCsvUpload);
+                document.getElementById('eco-snow-is-depth').addEventListener('change', runEconomySimulation);
+
+                const inputIds = [
+                    'eco-price-night', 'eco-price-day', 'eco-price-peak', 'eco-price-sell',
+                    'eco-pv-cap', 'eco-batt-max', 'eco-min-res',
+                    'eco-night-wkday', 'eco-night-wkend',
+                    'eco-target-temp', 'eco-base-cop'
+                ];
+                inputIds.forEach(id => {
+                    document.getElementById(id).addEventListener('input', runEconomySimulation);
+                });
+                document.getElementById('eco-use-breakeven').addEventListener('change', runEconomySimulation);
+
+                document.getElementById('eco-reset-btn').addEventListener('click', () => {
+                    applySeasonDefaultsToUI(season);
+                    runEconomySimulation();
+                });
+
+                document.getElementById('eco-week-start').addEventListener('input', () => {
+                    if (lastResult) renderEconomyCharts(lastResult);
+                });
+                document.getElementById('eco-week-reset').addEventListener('click', () => {
+                    document.getElementById('eco-week-start').value = "0";
+                    if (lastResult) renderEconomyCharts(lastResult);
+                });
+
+                setSeason(initialSeason || 'winter');
+            }
+
+            function resizeCharts() {
+                Object.values(charts).forEach(ch => { if (ch) ch.resize(); });
+            }
+
+            return { init, setSeason, resizeCharts };
+        })();
+    </script>
+</body>
+</html>
