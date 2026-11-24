@@ -970,73 +970,6 @@
             return { loadManifest, hasCityInSeason, loadDataset, loadAllCitiesForYear, getCached, getManifestSync };
         })();
 
-        // 釧路 夏期（6〜8月 全2208時間）代表気象モデルデータ生成（決定論的・再現性あり）
-        // ※夏期実測JSON未収録都市・ローカル直開き時のフォールバック用として維持
-        function generateKushiroSummerSample() {
-            const arr = [];
-            const startMs = Date.UTC(2025, 5, 1, 0, 0, 0); // 2025-06-01 00:00
-            const totalHours = (30 + 31 + 31) * 24; // 92日 = 2208時間
-            let seed = 20250601;
-            function rand() {
-                seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-                let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-            }
-
-            const totalDays = 92;
-            const daySky = new Array(totalDays);
-            const dayTempShift = new Array(totalDays);
-            let weatherState = 0.6;
-            let tempDrift = 0.0;
-            for (let d = 0; d < totalDays; d++) {
-                weatherState = Math.max(0.05, Math.min(0.98, weatherState * 0.55 + rand() * 0.45));
-                daySky[d] = weatherState;
-                tempDrift = Math.max(-3.5, Math.min(5.5, tempDrift * 0.65 + (rand() - 0.45) * 3.8));
-                dayTempShift[d] = tempDrift;
-            }
-
-            const lat = 42.98 * Math.PI / 180.0;
-            for (let i = 0; i < totalHours; i++) {
-                const dt = new Date(startMs + i * 3600 * 1000);
-                const dIdx = Math.floor(i / 24);
-                const h = dt.getUTCHours();
-                const doy = getDayOfYearUTC(dt);
-
-                const seasonalMean = 11.2 + 9.2 * Math.sin(Math.PI * Math.min(1.0, (dIdx + 8) / 108.0));
-                const sky = daySky[dIdx];
-                const diurnalAmp = 2.4 + sky * 3.6;
-                const diurnal = -Math.cos((h - 4) * Math.PI / 12.0) * diurnalAmp;
-                const temp = Math.round((seasonalMean + dayTempShift[dIdx] + diurnal + (rand() - 0.5) * 0.6) * 10) / 10;
-
-                const delta = (23.45 * Math.sin(((360.0 / 365.0) * (284 + doy)) * Math.PI / 180.0)) * Math.PI / 180.0;
-                const omega = ((h - 12.0) * 15.0) * Math.PI / 180.0;
-                const sin_h = Math.max(0.0, Math.sin(lat) * Math.sin(delta) + Math.cos(lat) * Math.cos(delta) * Math.cos(omega));
-
-                let sun = 0.0;
-                let solarRadMJ = 0.0;
-                if (sin_h > 0.03) {
-                    const cloudNoise = (rand() - 0.5) * 0.25;
-                    sun = Math.max(0.0, Math.min(1.0, Math.round((sky * 1.15 - 0.15 + cloudNoise) * 10) / 10));
-                    const kwh_m2 = (1.367 * sin_h) * (0.22 + 0.52 * sun);
-                    solarRadMJ = Math.max(0.0, Math.round(kwh_m2 * 3.6 * 100) / 100);
-                }
-
-                arr.push({
-                    datetime: dt,
-                    temp: temp,
-                    snow: 0.0,
-                    sunshine: sun,
-                    solar_rad: solarRadMJ,
-                    solar_rad_is_missing: false
-                });
-            }
-            return {
-                label: "釧路 夏期代表モデル (2025/06/01〜2025/08/31 全2208時間・サンプル)",
-                data: arr
-            };
-        }
-
         function getDayOfYearUTC(dt) {
             const start = Date.UTC(dt.getUTCFullYear(), 0, 0);
             return Math.floor((dt.getTime() - start) / (1000 * 60 * 60 * 24));
@@ -1819,7 +1752,8 @@
                     price_day: 35.0,
                     price_peak: 42.0,
                     sell_price_fixed: 8.0,
-                    lat_deg: 42.98,
+                    lat_deg: 42.985,
+                    lon_deg: 144.377,
                     tilt_deg: 40.0,
                     azimuth_deg: 0.0,
                     pv_capacity_kW: 5.0,
@@ -1851,7 +1785,8 @@
                     price_day: 35.0,
                     price_peak: 42.0,
                     sell_price_fixed: 8.0,
-                    lat_deg: 42.98,
+                    lat_deg: 42.985,
+                    lon_deg: 144.377,
                     tilt_deg: 40.0,
                     azimuth_deg: 0.0,
                     pv_capacity_kW: 5.0,
@@ -1899,10 +1834,10 @@
             let selectedCity = 'kushiro';
             let selectedYear = '2025';
             let activeCityLat = 42.985;
+            let activeCityLon = 144.377;
             let activeCityName = '釧路';
             let activeWeather = [];
             let activeDataLabel = '';
-            let activeDataIsSample = false;
             let activeDataWarning = '';
             let lastResult = null;
             let charts = {};
@@ -1973,6 +1908,7 @@
                 base.base_cop = parseFloat(document.getElementById('eco-base-cop').value);
                 base.snow_col_is_depth = false;
                 base.lat_deg = activeCityLat;
+                base.lon_deg = activeCityLon;
 
                 document.getElementById('eco-pv-cap-val').innerText = `${base.pv_capacity_kW.toFixed(1)} kW`;
                 document.getElementById('eco-batt-max-val').innerText = `${base.battery_max_kWh.toFixed(0)} kWh`;
@@ -1990,7 +1926,7 @@
                 if (specsEl) {
                     const hvacCap = (season === 'winter') ? `暖房最大${base.max_hvac_kW}kW` : `冷房最大${base.max_hvac_kW}kW`;
                     specsEl.innerHTML =
-                        `<strong>固定物理仕様:</strong> UA=${base.u_value} / 外皮${base.envelope_area}㎡ / 気積${base.air_volume}㎥ / 換気${base.ach}回/h / C_th=${base.c_th.toFixed(1)} kWh/K / ${hvacCap} / 初期SOC=${base.initial_soc_kWh.toFixed(1)}kWh / 充放電最大${base.max_charge_kW}kW / V2H待機${base.v2h_standby_kW}kW / 緯度${base.lat_deg.toFixed(2)}° / 平日外出8-18時(10kWh)・休日11-15時(6kWh)`;
+                        `<strong>固定物理仕様 (サバイバル共通物理コア):</strong> UA=${base.u_value} / 外皮${base.envelope_area}㎡ / 気積${base.air_volume}㎥ / 換気${base.ach}回/h / C_th=${base.c_th.toFixed(1)} kWh/K (連続指数積分) / ${hvacCap} / 初期SOC=${base.initial_soc_kWh.toFixed(1)}kWh / 充放電最大${base.max_charge_kW}kW / V2H待機${base.v2h_standby_kW}kW / 北緯${base.lat_deg.toFixed(2)}°・東経${base.lon_deg.toFixed(2)}° (均時差・4サブステップ日射) / 平日外出8-18時(10kWh)・休日11-15時(6kWh)`;
                 }
                 return base;
             }
@@ -2045,7 +1981,7 @@
 
                     document.getElementById('eco-hvac-section-title').innerText = "建物・暖房設定（冬期：ISO 13790 RC回路）";
                     document.getElementById('eco-target-temp-label').innerText = "暖房目標室温 (℃)";
-                    document.getElementById('eco-base-cop-label').innerText = "基準暖房COP (外気20℃時)";
+                    document.getElementById('eco-base-cop-label').innerText = "基準暖房COP (外気7℃定格)";
                     document.getElementById('eco-metric-hvac-label').innerText = "暖房負荷 / 総需要";
                     document.getElementById('eco-breakdown-chart-title').innerText = "④ 冬期3ヶ月の時間帯別コスト内訳比較（全項目合算＝実質合計）";
                 } else {
@@ -2073,87 +2009,48 @@
                 const mySeq = ++ecoLoadSeq;
                 activeDataWarning = '';
                 const statusEl = document.getElementById('eco-data-status');
+                const badgeEl = document.getElementById('eco-data-badge');
+                const warnEl = document.getElementById('eco-data-warn');
+                const sLabel = (season === 'winter') ? '冬' : '夏';
+                const cityLabel = CITY_LABELS[selectedCity] || selectedCity;
 
-                if (season === 'winter') {
-                    statusEl.innerText = `読込中... (${CITY_LABELS[selectedCity] || selectedCity} / ${selectedYear}年冬)`;
-                    statusEl.className = "text-xs text-blue-700 font-medium mt-1.5";
-                    try {
-                        const parsed = await WeatherStore.loadDataset('winter', selectedCity, selectedYear);
-                        if (mySeq !== ecoLoadSeq) return false;
-                        selectedCity = parsed.cityKey;
-                        selectedYear = parsed.yearKey;
-                        activeWeather = parsed.data;
-                        activeDataLabel = parsed.label;
-                        activeCityLat = parsed.lat;
-                        activeCityName = parsed.cityName;
-                        activeDataIsSample = false;
-                    } catch (err) {
-                        if (mySeq !== ecoLoadSeq) return false;
-                        activeDataLabel = `⚠️ 読込エラー: ${err.message}`;
-                        activeDataWarning = "ローカルで直接開いている場合はGitHub PagesまたはLive Server経由で開いてください。";
-                        statusEl.innerText = activeDataLabel;
-                        statusEl.className = "text-xs text-red-600 font-bold mt-1.5";
-                        const wEl = document.getElementById('eco-data-warn');
-                        wEl.innerText = activeDataWarning;
-                        wEl.classList.remove('hidden');
-                        return false;
-                    }
-                } else {
-                    // 夏期：manifest.json に該当都市の実測JSONがあれば読込、未収録・エラー時のみ代表モデルへフォールバック
-                    let loadedRealSummer = false;
-                    statusEl.innerText = `読込中... (${CITY_LABELS[selectedCity] || selectedCity} / ${selectedYear}年夏)`;
-                    statusEl.className = "text-xs text-blue-700 font-medium mt-1.5";
-                    try {
-                        const hasReal = await WeatherStore.hasCityInSeason('summer', selectedCity);
-                        if (mySeq !== ecoLoadSeq) return false;
-                        if (hasReal) {
-                            const parsed = await WeatherStore.loadDataset('summer', selectedCity, selectedYear);
-                            if (mySeq !== ecoLoadSeq) return false;
-                            selectedCity = parsed.cityKey;
-                            selectedYear = parsed.yearKey;
-                            activeWeather = parsed.data;
-                            activeDataLabel = parsed.label;
-                            activeCityLat = parsed.lat;
-                            activeCityName = parsed.cityName;
-                            activeDataIsSample = false;
-                            loadedRealSummer = true;
-                        } else {
-                            activeDataWarning = `※${CITY_LABELS[selectedCity] || selectedCity}の夏期実測JSONは未収録のため、内蔵の釧路夏期代表モデルを表示しています。`;
-                        }
-                    } catch (err) {
-                        if (mySeq !== ecoLoadSeq) return false;
-                        activeDataWarning = `※夏期実測JSONの取得に失敗したため、内蔵の釧路夏期代表モデルへフォールバックしました (${err.message})。`;
-                    }
+                statusEl.innerText = `読込中... (${cityLabel} / ${selectedYear}年${sLabel})`;
+                statusEl.className = "text-xs text-blue-700 font-medium mt-1.5";
 
-                    if (!loadedRealSummer) {
-                        const sample = generateKushiroSummerSample();
-                        activeWeather = sample.data;
-                        activeDataLabel = sample.label;
-                        activeCityLat = 42.985;
-                        activeCityName = '釧路 (代表モデル)';
-                        activeDataIsSample = true;
+                try {
+                    const hasReal = await WeatherStore.hasCityInSeason(season, selectedCity);
+                    if (mySeq !== ecoLoadSeq) return false;
+                    if (!hasReal) {
+                        throw new Error(`${cityLabel} の${sLabel}期実測データが manifest.json に登録されていません`);
                     }
+                    const parsed = await WeatherStore.loadDataset(season, selectedCity, selectedYear);
+                    if (mySeq !== ecoLoadSeq) return false;
+                    selectedCity = parsed.cityKey;
+                    selectedYear = parsed.yearKey;
+                    activeWeather = parsed.data;
+                    activeDataLabel = parsed.label;
+                    activeCityLat = parsed.lat;
+                    activeCityLon = parsed.lon;
+                    activeCityName = parsed.cityName;
+                } catch (err) {
+                    if (mySeq !== ecoLoadSeq) return false;
+                    activeDataLabel = `⚠️ 読込エラー: ${err.message}`;
+                    activeDataWarning = "data/manifest.json と対象JSONファイルの配置を確認してください（ローカル直開きの場合はLive ServerまたはGitHub Pages経由で開いてください）。";
+                    statusEl.innerText = activeDataLabel;
+                    statusEl.className = "text-xs text-red-600 font-bold mt-1.5";
+                    badgeEl.innerText = "読込エラー";
+                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800";
+                    warnEl.innerText = activeDataWarning;
+                    warnEl.classList.remove('hidden');
+                    return false;
                 }
 
                 // ステータス表示更新
                 statusEl.innerText = `現在: ${activeDataLabel}`;
                 statusEl.className = "text-xs text-emerald-700 font-medium mt-1.5";
-                const badgeEl = document.getElementById('eco-data-badge');
-                if (activeDataIsSample) {
-                    badgeEl.innerText = "夏期代表モデル";
-                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800";
-                } else {
-                    badgeEl.innerText = "内蔵実測データ";
-                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
-                }
-
-                const warnEl = document.getElementById('eco-data-warn');
-                if (activeDataWarning) {
-                    warnEl.innerText = activeDataWarning;
-                    warnEl.classList.remove('hidden');
-                } else {
-                    warnEl.classList.add('hidden');
-                }
+                badgeEl.innerText = "内蔵実測データ";
+                badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+                warnEl.classList.add('hidden');
 
                 // 週スライダー上限更新
                 const maxDays = Math.max(0, Math.floor(activeWeather.length / 24) - 7);
@@ -2224,10 +2121,12 @@
                     sellPrices[i] = cfg.sell_price_fixed;
                 }
 
-                // 2. 太陽光発電モデル（方位角 ＋ FAO-56欠損補完 ＋ 温度補正 ＋ 冬期積雪滑落）
+                // 2. 太陽光発電モデル（経度・均時差補正 ＋ 4サブステップ日射 ＋ 方位角 ＋ アルベド ＋ 温度補正 ＋ 冬期積雪滑落）
                 const lat = cfg.lat_deg * Math.PI / 180.0;
+                const lon_diff_deg = (cfg.lon_deg || 144.377) - 135.0;
                 const tilt = cfg.tilt_deg * Math.PI / 180.0;
                 const az = cfg.azimuth_deg * Math.PI / 180.0;
+                const sub_offsets = [-0.875, -0.625, -0.375, -0.125];
                 const radColAllZero = (radMax <= 0.0);
 
                 const tiltedRad = new Float64Array(n);
@@ -2239,55 +2138,84 @@
                     const doy = getDayOfYearUTC(dtArr[i]);
                     const hourExact = hourArr[i] + dtArr[i].getUTCMinutes() / 60.0;
                     const delta = (23.45 * Math.sin(((360.0 / 365.0) * (284 + doy)) * Math.PI / 180.0)) * Math.PI / 180.0;
-                    const omega = ((hourExact - 12.0) * 15.0) * Math.PI / 180.0;
 
-                    const sin_h = Math.max(0.0, Math.min(1.0, Math.sin(lat) * Math.sin(delta) + Math.cos(lat) * Math.cos(delta) * Math.cos(omega)));
-                    const term1 = Math.sin(delta) * Math.sin(lat) * Math.cos(tilt);
-                    const term2 = -Math.sin(delta) * Math.cos(lat) * Math.sin(tilt) * Math.cos(az);
-                    const term3 = Math.cos(delta) * Math.cos(lat) * Math.cos(tilt) * Math.cos(omega);
-                    const term4 = Math.cos(delta) * Math.sin(lat) * Math.sin(tilt) * Math.cos(az) * Math.cos(omega);
-                    const term5 = Math.cos(delta) * Math.sin(tilt) * Math.sin(az) * Math.sin(omega);
-                    const cos_theta = Math.max(0.0, Math.min(1.0, term1 + term2 + term3 + term4 + term5));
+                    const B_rad = (2.0 * Math.PI * (doy - 81)) / 365.0;
+                    const eot_hours = (9.87 * Math.sin(2.0 * B_rad) - 7.53 * Math.cos(B_rad) - 1.5 * Math.sin(B_rad)) / 60.0;
+
+                    let sum_sin_h = 0.0;
+                    let sum_cos_theta = 0.0;
+                    for (let s = 0; s < 4; s++) {
+                        const solar_h = hourExact + sub_offsets[s] + eot_hours;
+                        const omega = ((solar_h - 12.0) * 15.0 + lon_diff_deg) * Math.PI / 180.0;
+                        const sh = Math.max(0.0, Math.min(1.0, Math.sin(lat) * Math.sin(delta) + Math.cos(lat) * Math.cos(delta) * Math.cos(omega)));
+                        let ct = 0.0;
+                        if (sh > 0.0) {
+                            const term1 = Math.sin(delta) * Math.sin(lat) * Math.cos(tilt);
+                            const term2 = -Math.sin(delta) * Math.cos(lat) * Math.sin(tilt) * Math.cos(az);
+                            const term3 = Math.cos(delta) * Math.cos(lat) * Math.cos(tilt) * Math.cos(omega);
+                            const term4 = Math.cos(delta) * Math.sin(lat) * Math.sin(tilt) * Math.cos(az) * Math.cos(omega);
+                            const term5 = Math.cos(delta) * Math.sin(tilt) * Math.sin(az) * Math.sin(omega);
+                            ct = Math.max(0.0, Math.min(1.0, term1 + term2 + term3 + term4 + term5));
+                        }
+                        sum_sin_h += sh;
+                        sum_cos_theta += ct;
+                    }
+                    const sin_h = sum_sin_h / 4.0;
+                    const cos_theta = sum_cos_theta / 4.0;
+
+                    let currS = 0.0;
+                    if (isWinter) {
+                        const addedS = Math.max(0.0, snowArr[i]);
+                        const prevS = (i === 0 || isGap[i]) ? 0.0 : panelSnow[i - 1];
+                        currS = prevS + addedS;
+                    }
 
                     const sunClip = Math.max(0.0, Math.min(1.0, sunArr[i]));
-                    const estRad = (1.367 * sin_h) * (0.25 + 0.50 * sunClip);
+                    const E0 = 1.0 + 0.033 * Math.cos((2.0 * Math.PI * doy) / 365.0);
+                    const estRad = (1.367 * E0 * sin_h) * (0.25 + 0.50 * sunClip);
                     const useEst = (radMissing[i] === 1) || radColAllZero;
                     const horizRad = useEst ? estRad : (radArr[i] / 3.6);
 
-                    const Rb = (sin_h > 0.0) ? Math.max(0.0, Math.min(3.0, cos_theta / Math.max(sin_h, 0.05))) : 0.0;
+                    const Rb = (sin_h > 0.005) ? Math.max(0.0, Math.min(4.0, cos_theta / Math.max(sin_h, 0.05))) : 0.0;
                     const directRatio = sunClip;
                     const diffuseRatio = 1.0 - directRatio;
-                    const tRad = horizRad * (directRatio * Rb + diffuseRatio * ((1.0 + Math.cos(tilt)) / 2.0));
+                    const albedo = (isWinter && (currS > 0.0 || tempArr[i] < 0.0)) ? 0.5 : 0.2;
+                    const tRad = horizRad * (
+                        directRatio * Rb +
+                        diffuseRatio * ((1.0 + Math.cos(tilt)) / 2.0) +
+                        albedo * ((1.0 - Math.cos(tilt)) / 2.0)
+                    );
                     tiltedRad[i] = tRad;
 
                     const G_w_m2 = tRad * 1000.0;
-                    const pTemp = tempArr[i] + (G_w_m2 / 800.0) * (cfg.panel_noct - 20.0);
-                    panelTemp[i] = pTemp;
-                    const KPT = Math.max(0.75, Math.min(1.15, 1.0 - cfg.panel_temp_coeff * (pTemp - 25.0)));
-                    const pvBase = cfg.pv_capacity_kW * tRad * cfg.pv_system_loss * KPT;
 
                     if (isWinter) {
-                        let addedS = 0.0;
-                        if (cfg.snow_col_is_depth) {
-                            addedS = (i === 0 || isGap[i]) ? 0.0 : Math.max(0.0, snowArr[i] - snowArr[i - 1]);
+                        const preMeltTrans = (currS <= 0.0) ? 1.0 : Math.exp(-0.3 * currS);
+                        const pTempMelt = tempArr[i] + ((G_w_m2 * preMeltTrans) / 800.0) * (cfg.panel_noct - 20.0);
+                        if (tempArr[i] >= 2.0 || pTempMelt >= 5.0) {
+                            currS = 0.0;
+                        } else if (tempArr[i] >= 0.0) {
+                            currS *= 0.5;
                         } else {
-                            addedS = Math.max(0.0, snowArr[i]);
+                            currS *= 0.9;
+                            if (currS < 0.05) currS = 0.0;
                         }
-                        const prevS = (i === 0 || isGap[i]) ? 0.0 : panelSnow[i - 1];
-                        let currS = prevS + addedS;
-                        if (tempArr[i] >= 2.0 || pTemp >= 5.0) currS = 0.0;
-                        else if (tempArr[i] >= 0.0) currS *= 0.5;
-                        else currS *= 0.9;
                         panelSnow[i] = currS;
 
-                        const snowPenalty = (currS > 0.0) ? Math.exp(-0.3 * currS) : 1.0;
-                        pvGen[i] = pvBase * snowPenalty;
+                        const snowPenalty = (currS <= 0.0) ? 1.0 : Math.exp(-0.3 * currS);
+                        const pTemp = tempArr[i] + ((G_w_m2 * snowPenalty) / 800.0) * (cfg.panel_noct - 20.0);
+                        panelTemp[i] = pTemp;
+                        const KPT = Math.max(0.70, Math.min(1.15, 1.0 - cfg.panel_temp_coeff * (pTemp - 25.0)));
+                        pvGen[i] = cfg.pv_capacity_kW * tRad * cfg.pv_system_loss * KPT * snowPenalty;
                     } else {
-                        pvGen[i] = pvBase;
+                        const pTemp = tempArr[i] + (G_w_m2 / 800.0) * (cfg.panel_noct - 20.0);
+                        panelTemp[i] = pTemp;
+                        const KPT = Math.max(0.70, Math.min(1.15, 1.0 - cfg.panel_temp_coeff * (pTemp - 25.0)));
+                        pvGen[i] = cfg.pv_capacity_kW * tRad * cfg.pv_system_loss * KPT;
                     }
                 }
 
-                // 3. 室温・生活電力モデル（ISO 13790 RC等価回路：冬期暖房 / 夏期冷房）
+                // 3. 室温・生活電力モデル（ISO 13790 RC連続指数積分 ＋ 統一COP式：冬期暖房 / 夏期冷房）
                 const lifestyleArr = new Float64Array(n);
                 const hvacArr = new Float64Array(n);
                 const roomTempArr = new Float64Array(n);
@@ -2298,6 +2226,11 @@
                 const H_tr_base = (transLoss + ventLoss) / 1000.0;
                 const C_th = cfg.c_th;
                 const targetT = cfg.target_temp;
+
+                function stepRoomTempEco(T_start, temp_out, H, Q_in) {
+                    const T_eq = temp_out + Q_in / H;
+                    return T_eq + (T_start - T_eq) * Math.exp(-H / C_th);
+                }
 
                 let T_in = isWinter ? targetT : Math.max(20.0, Math.min(targetT, tempArr[0]));
 
@@ -2312,25 +2245,33 @@
                     const tempOut = tempArr[i];
                     const internalHeat = 0.3 + life * 0.5;
                     const solarGain = tiltedRad[i] * cfg.solar_gain_factor;
+                    const passiveQ = internalHeat + solarGain;
 
                     let hvacPower = 0.0;
                     if (isWinter) {
                         const effHtr = (T_in > targetT + 2.0) ? H_tr_base * 3.0 : H_tr_base;
-                        const predT = T_in + (internalHeat + solarGain - effHtr * (T_in - tempOut)) / C_th;
-                        const effCOP = Math.max(1.8, cfg.base_cop - Math.max(0.0, (20.0 - tempOut) * 0.05));
+                        const predT = stepRoomTempEco(T_in, tempOut, effHtr, passiveQ);
+                        // サバイバル側と統一した外気温連動COP式（外気7℃定格基準）
+                        const effCOP = (cfg.base_cop > 1.05)
+                            ? Math.max(1.0, cfg.base_cop * Math.max(0.45, Math.min(1.15, 1.0 + 0.022 * (tempOut - 7.0))))
+                            : cfg.base_cop;
                         if (predT < targetT) {
-                            const reqHeat = (targetT - predT) * C_th;
+                            const exp_1h = Math.exp(-H_tr_base / C_th);
+                            const qTotalNeeded = H_tr_base * ((targetT - tempOut - (T_in - tempOut) * exp_1h) / (1.0 - exp_1h));
+                            const reqHeat = Math.max(0.0, qTotalNeeded - passiveQ);
                             hvacPower = Math.max(0.0, Math.min(reqHeat / effCOP, cfg.max_hvac_kW));
                         }
-                        T_in = predT + (hvacPower * effCOP) / C_th;
+                        T_in = stepRoomTempEco(T_in, tempOut, effHtr, passiveQ + hvacPower * effCOP);
                     } else {
-                        const predT = T_in + (internalHeat + solarGain - H_tr_base * (T_in - tempOut)) / C_th;
+                        const predT = stepRoomTempEco(T_in, tempOut, H_tr_base, passiveQ);
                         const effCOP = Math.max(2.5, cfg.base_cop - Math.max(0.0, (tempOut - 25.0) * 0.08));
                         if (predT > targetT) {
-                            const reqCool = (predT - targetT) * C_th;
+                            const exp_1h = Math.exp(-H_tr_base / C_th);
+                            const qTotalNeeded = H_tr_base * ((targetT - tempOut - (T_in - tempOut) * exp_1h) / (1.0 - exp_1h));
+                            const reqCool = Math.max(0.0, passiveQ - qTotalNeeded);
                             hvacPower = Math.max(0.0, Math.min(reqCool / effCOP, cfg.max_hvac_kW));
                         }
-                        T_in = predT - (hvacPower * effCOP) / C_th;
+                        T_in = stepRoomTempEco(T_in, tempOut, H_tr_base, passiveQ - hvacPower * effCOP);
                     }
 
                     hvacArr[i] = hvacPower;
