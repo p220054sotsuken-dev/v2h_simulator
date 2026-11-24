@@ -154,7 +154,7 @@
                         <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6 space-y-2 text-xs text-slate-700">
                             <div class="flex items-start gap-2">
                                 <span class="text-orange-600 font-bold">✓</span>
-                                <span><strong>冬期（12〜2月・道内8都市×6年実測）</strong>と<strong>夏期（6〜8月・実測JSON＋未収録時自動モデル補完）</strong>を切替対応</span>
+                                <span><strong>冬期（12〜2月）</strong>と<strong>夏期（6〜8月）</strong>の道内8都市×6年実測データ（全96シーズン）を切替対応</span>
                             </div>
                             <div class="flex items-start gap-2">
                                 <span class="text-orange-600 font-bold">✓</span>
@@ -162,7 +162,7 @@
                             </div>
                             <div class="flex items-start gap-2">
                                 <span class="text-orange-600 font-bold">✓</span>
-                                <span>5グラフ統合ダッシュボード＆時間帯別収支表を再現（手元の気象庁CSV読込にも対応）</span>
+                                <span>5グラフ統合ダッシュボード＆時間帯別収支表を再現</span>
                             </div>
                         </div>
 
@@ -202,7 +202,7 @@
                     </div>
                     <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                         <div class="font-bold text-slate-800 mb-1">3. 経済性・夏期モデル (JA01)</div>
-                        住宅全体・冷房目標26℃・夏期COP(基準4.0)・夜間充電(平日75%/休日55%)でPV余剰受入を最大化。実測JSON（釧路2020〜2025年夏・追加都市自動対応）＋未収録時代表モデル補完＆CSV対応。
+                        住宅全体・冷房目標26℃・夏期COP(基準4.0)・夜間充電(平日75%/休日55%)でPV余剰受入を最大化。道内8都市×2020〜2025年夏（48データセット）実測JSON対応。
                     </div>
                 </div>
             </div>
@@ -371,12 +371,6 @@
                             <option value="auto">Python版準拠（限界到達+48h / 最大30日間）</option>
                             <option value="full">全期間を表示（開始日〜2月末日）</option>
                         </select>
-                    </div>
-
-                    <!-- CSV File Loader (Optional) -->
-                    <div class="mt-4 pt-3 border-t border-slate-200">
-                        <label for="csvFileInput" class="block text-xs font-bold text-slate-700 mb-1">📂 さらに別の気象庁CSVを追加読み込み（任意・列自動検出）</label>
-                        <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
                     </div>
 
                     <div class="bg-blue-50 rounded-lg p-4 mt-4 border border-blue-100">
@@ -552,23 +546,7 @@
                         <p id="eco-data-status" class="text-xs text-emerald-700 font-medium mt-1.5">
                             読込中...
                         </p>
-                        <button id="eco-btn-clear-csv" type="button" class="hidden mt-1.5 w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200">
-                            ↩️ CSVを解除して内蔵データに戻す
-                        </button>
                         <p id="eco-data-warn" class="hidden text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2"></p>
-
-                        <!-- CSV File Uploader -->
-                        <div class="mt-3 pt-3 border-t border-slate-100">
-                            <label for="eco-csv-input" class="block text-xs font-bold text-slate-700 mb-1">
-                                📂 気象庁CSVファイルを読み込む（Shift_JIS/UTF-8・24:00対応）
-                            </label>
-                            <input type="file" id="eco-csv-input" accept=".csv"
-                                class="block w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
-                            <label id="eco-snow-depth-wrap" class="mt-2 flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-                                <input type="checkbox" id="eco-snow-is-depth" class="rounded border-slate-300 text-blue-600">
-                                <span>CSVの積雪列を「積雪深(累計)」として差分計算する（DF02仕様）</span>
-                            </label>
-                        </div>
                     </div>
 
                     <!-- Parameter Header -->
@@ -938,7 +916,13 @@
                 if (!sBlock || !sBlock.files) throw new Error(`${season} データが manifest にありません`);
 
                 const cKey = sBlock.files[cityKey] ? cityKey : Object.keys(sBlock.files)[0];
+                if (!cKey || !sBlock.files[cKey]) {
+                    throw new Error(`${season}.files が空です（data/manifest.json を確認してください）`);
+                }
                 const yKey = sBlock.files[cKey][String(yearKey)] ? String(yearKey) : Object.keys(sBlock.files[cKey]).sort().reverse()[0];
+                if (!yKey || !sBlock.files[cKey][yKey]) {
+                    throw new Error(`${season}.${cKey} の年度データが manifest.json にありません`);
+                }
                 const cacheKey = `${season}_${cKey}_${yKey}`;
 
                 if (dataCache[cacheKey]) return dataCache[cacheKey];
@@ -1058,33 +1042,6 @@
             return Math.floor((dt.getTime() - start) / (1000 * 60 * 60 * 24));
         }
 
-        function parseJmaNumberCommon(str) {
-            if (str === undefined || str === null) return NaN;
-            const cleaned = String(str).replace(/[^\d.\-+]/g, '');
-            if (!cleaned || cleaned === '-' || cleaned === '+' || cleaned === '.') return NaN;
-            return parseFloat(cleaned);
-        }
-
-        // 気象庁CSVの「24:00」表記にも対応した日時パース
-        function parseJmaDateTimeUTC(dtStr) {
-            const s = String(dtStr).trim();
-            if (!/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}/.test(s)) return { dt: null, is24h: false };
-            const is24h = /\s24:00(?::00)?$/.test(s);
-            const norm = is24h ? s.replace(/(\s)24(:00(?::00)?)$/, '$100$2') : s;
-            const parts = norm.split(/[\/\-\s:]/);
-            if (parts.length < 4) return { dt: null, is24h: false };
-            const baseMs = Date.UTC(
-                parseInt(parts[0], 10),
-                parseInt(parts[1], 10) - 1,
-                parseInt(parts[2], 10),
-                parseInt(parts[3], 10),
-                parts[4] ? parseInt(parts[4], 10) : 0
-            );
-            if (isNaN(baseMs)) return { dt: null, is24h: false };
-            const dt = new Date(baseMs + (is24h ? 24 * 3600 * 1000 : 0));
-            return { dt, is24h };
-        }
-
         // =========================================================
         // 1. アプリケーション・ルーター（画面切替管理）
         // =========================================================
@@ -1143,7 +1100,6 @@
         const SurvivalApp = (() => {
             let currentCityKey = "kushiro";
             let currentYearKey = "2025";
-            let isCustomCsv = false;
             let currentMeta = { cityName: "釧路", lat: 42.985, lon: 144.377, desc: "太平洋側・少雪多照", hasRad: false };
             let weatherData = [];
             let upperChartInstance = null;
@@ -1184,13 +1140,13 @@
 
             function updateSelectorButtons() {
                 document.querySelectorAll('#cityBtnGrid .city-btn').forEach(btn => {
-                    const active = !isCustomCsv && btn.dataset.city === currentCityKey;
+                    const active = btn.dataset.city === currentCityKey;
                     btn.className = active
                         ? "city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm"
                         : "city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
                 });
                 document.querySelectorAll('#yearBtnGrid .year-btn').forEach(btn => {
-                    const active = !isCustomCsv && btn.dataset.year === currentYearKey;
+                    const active = btn.dataset.year === currentYearKey;
                     btn.className = active
                         ? "year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm"
                         : "year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
@@ -1200,7 +1156,6 @@
             async function loadBuiltInDataset(cityKey, yearKey) {
                 currentCityKey = cityKey || currentCityKey;
                 currentYearKey = String(yearKey || currentYearKey);
-                isCustomCsv = false;
                 updateSelectorButtons();
 
                 const mySeq = ++loadSeq;
@@ -1224,9 +1179,6 @@
                         hasRad: parsed.hasRad
                     };
 
-                    const csvInput = document.getElementById('csvFileInput');
-                    if (csvInput) csvInput.value = "";
-
                     statusEl.innerText = `現在: ${parsed.label}`;
                     statusEl.className = "text-xs text-emerald-800 font-bold leading-snug";
 
@@ -1242,7 +1194,7 @@
                     if (mySeq !== loadSeq) return;
                     statusEl.innerText = `⚠️ データ読込エラー: ${err.message}`;
                     statusEl.className = "text-xs text-red-600 font-bold leading-snug";
-                    statsSubEl.innerText = "ローカルでHTMLを直接開くとブラウザ制限でdata/を読めません。GitHub PagesまたはLive Server経由で開くか、下のCSV読み込みをご利用ください。";
+                    statsSubEl.innerText = "ローカルでHTMLを直接開くとブラウザ制限でdata/を読めません。GitHub PagesまたはLive Server経由で開いてください。";
                 }
             }
 
@@ -1543,7 +1495,7 @@
                         params,
                         false
                     );
-                    const isSelected = !isCustomCsv && cMeta.id === currentCityKey;
+                    const isSelected = cMeta.id === currentCityKey;
                     const rowClass = isSelected
                         ? "bg-blue-50/90 font-bold text-slate-900 cursor-pointer"
                         : "hover:bg-slate-50 text-slate-700 cursor-pointer transition";
@@ -1815,117 +1767,7 @@
                 });
             }
 
-            function handleCsvUpload(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const buffer = evt.target.result;
-                    let text = "";
-                    try {
-                        text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
-                    } catch (_) {
-                        text = new TextDecoder('shift_jis').decode(buffer);
-                    }
-                    text = text.replace(/^\uFEFF/, '');
-                    const lines = text.split(/\r?\n/);
-                    const parsed = [];
-
-                    let tempCol = 1, snowCol = 4, sunCol = 8, radCol = -1;
-                    for (let i = 0; i < Math.min(10, lines.length); i++) {
-                        if (lines[i].includes('気温') && (lines[i].includes('日照') || lines[i].includes('降雪') || lines[i].includes('積雪') || lines[i].includes('日射'))) {
-                            const hCols = lines[i].split(',');
-                            const subCols1 = (i + 1 < lines.length) ? lines[i + 1].split(',') : [];
-                            const subCols2 = (i + 2 < lines.length) ? lines[i + 2].split(',') : [];
-                            tempCol = -1; snowCol = -1; sunCol = -1; radCol = -1;
-                            for (let c = 1; c < hCols.length; c++) {
-                                const hName = hCols[c].trim();
-                                const sName = ((subCols1[c] || '') + ' ' + (subCols2[c] || '')).trim();
-                                if (sName.includes('品質') || sName.includes('均質') || sName.includes('現象')) continue;
-                                if (hName.includes('気温') && tempCol < 0) { tempCol = c; }
-                                else if (hName.includes('降雪') && snowCol < 0) { snowCol = c; }
-                                else if (hName.includes('日照') && sunCol < 0) { sunCol = c; }
-                                else if (hName.includes('日射') && radCol < 0) { radCol = c; }
-                            }
-                            break;
-                        }
-                    }
-
-                    for (let i = 0; i < lines.length; i++) {
-                        const cols = lines[i].split(',');
-                        if (cols.length < 2) continue;
-                        const { dt } = parseJmaDateTimeUTC(cols[0]);
-                        if (!dt) continue;
-
-                        const temp = (tempCol >= 0 && cols.length > tempCol) ? parseJmaNumberCommon(cols[tempCol]) : NaN;
-                        const snow = (snowCol >= 0 && cols.length > snowCol) ? parseJmaNumberCommon(cols[snowCol]) : NaN;
-                        const sun  = (sunCol >= 0 && cols.length > sunCol) ? parseJmaNumberCommon(cols[sunCol]) : NaN;
-                        const rad  = (radCol >= 0 && cols.length > radCol) ? parseJmaNumberCommon(cols[radCol]) : NaN;
-
-                        parsed.push({
-                            datetime: dt,
-                            temp: Number.isFinite(temp) ? temp : (parsed.length > 0 ? parsed[parsed.length - 1].temp : 0.0),
-                            snow: Number.isFinite(snow) ? Math.max(0.0, snow) : 0.0,
-                            sunshine: Number.isFinite(sun) ? Math.min(1.0, Math.max(0.0, sun)) : 0.0,
-                            solar_rad: Number.isFinite(rad) ? Math.max(0.0, rad) : NaN
-                        });
-                    }
-
-                    const statusEl = document.getElementById('dataStatus');
-                    if (parsed.length === 0) {
-                        statusEl.innerText = `エラー: ${file.name} から有効な気象データを読み取れませんでした。`;
-                        statusEl.className = "text-xs text-red-600 font-bold leading-snug";
-                        return;
-                    }
-
-                    parsed.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
-
-                    const winterYearsSet = new Set();
-                    for (let i = 0; i < parsed.length; i++) {
-                        const m = parsed[i].datetime.getUTCMonth();
-                        const y = parsed[i].datetime.getUTCFullYear();
-                        if (m === 11) winterYearsSet.add(y);
-                        else if (m === 0 || m === 1) winterYearsSet.add(y - 1);
-                    }
-                    const winterYears = Array.from(winterYearsSet).sort((a, b) => a - b);
-                    let filtered = parsed;
-                    let seasonNote = "";
-                    if (winterYears.length > 0) {
-                        const startYear = winterYears[winterYears.length - 1];
-                        const targetStart = new Date(Date.UTC(startYear, 11, 1, 0, 0, 0));
-                        const targetEnd = new Date(Date.UTC(startYear + 1, 2, 1, 0, 0, 0));
-                        const winterSlice = parsed.filter(r => r.datetime.getTime() >= targetStart.getTime() && r.datetime.getTime() < targetEnd.getTime());
-                        if (winterSlice.length > 0) {
-                            filtered = winterSlice;
-                            if (filtered[0].datetime.getTime() > targetStart.getTime()) {
-                                filtered.unshift({
-                                    datetime: targetStart,
-                                    temp: filtered[0].temp,
-                                    snow: filtered[0].snow,
-                                    sunshine: filtered[0].sunshine,
-                                    solar_rad: filtered[0].solar_rad
-                                });
-                            }
-                            if (winterYears.length > 1) {
-                                seasonNote = ` / 複数年から最新${startYear}年冬を抽出`;
-                            }
-                        }
-                    }
-
-                    isCustomCsv = true;
-                    weatherData = filtered;
-                    currentMeta = { cityName: file.name.replace(/\.csv$/i, ''), lat: 42.985, lon: 144.377, desc: "外部CSV読込", hasRad: radCol >= 0 };
-                    updateSelectorButtons();
-                    statusEl.innerText = `現在: ${file.name} を読み込みました (全${weatherData.length}時間${seasonNote})`;
-                    statusEl.className = "text-xs text-purple-800 font-bold leading-snug";
-                    document.getElementById('dataStatsSub').innerText = `外部CSVデータ使用中（座標は基準値: 北緯42.99° 東経144.38°）`;
-                    runSimulation();
-                };
-                reader.readAsArrayBuffer(file);
-            }
-
             function init() {
-                document.getElementById('csvFileInput').addEventListener('change', handleCsvUpload);
                 const batchBtn = document.getElementById('runBatchCompareBtn');
                 if (batchBtn) batchBtn.addEventListener('click', triggerBatchComparison);
                 document.querySelectorAll('#cityBtnGrid .city-btn').forEach(btn => {
@@ -2056,10 +1898,8 @@
             let season = 'winter';
             let selectedCity = 'kushiro';
             let selectedYear = '2025';
-            let forceSummerSample = false;
             let activeCityLat = 42.985;
             let activeCityName = '釧路';
-            let customWeatherBySeason = { winter: null, summer: null };
             let activeWeather = [];
             let activeDataLabel = '';
             let activeDataIsSample = false;
@@ -2131,7 +1971,7 @@
                 base.use_breakeven_control = document.getElementById('eco-use-breakeven').checked;
                 base.target_temp = parseFloat(document.getElementById('eco-target-temp').value);
                 base.base_cop = parseFloat(document.getElementById('eco-base-cop').value);
-                base.snow_col_is_depth = document.getElementById('eco-snow-is-depth').checked;
+                base.snow_col_is_depth = false;
                 base.lat_deg = activeCityLat;
 
                 document.getElementById('eco-pv-cap-val').innerText = `${base.pv_capacity_kW.toFixed(1)} kW`;
@@ -2203,7 +2043,6 @@
                     btnS.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white";
                     kpiBar.className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-sky-500 to-blue-600";
 
-                    document.getElementById('eco-snow-depth-wrap').classList.remove('hidden');
                     document.getElementById('eco-hvac-section-title').innerText = "建物・暖房設定（冬期：ISO 13790 RC回路）";
                     document.getElementById('eco-target-temp-label').innerText = "暖房目標室温 (℃)";
                     document.getElementById('eco-base-cop-label').innerText = "基準暖房COP (外気20℃時)";
@@ -2219,7 +2058,6 @@
                     btnW.className = "px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition text-slate-300 hover:text-white";
                     kpiBar.className = "absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 to-orange-600";
 
-                    document.getElementById('eco-snow-depth-wrap').classList.add('hidden');
                     document.getElementById('eco-hvac-section-title').innerText = "建物・冷房設定（夏期：ISO 13790 RC回路）";
                     document.getElementById('eco-target-temp-label').innerText = "冷房目標室温 (℃)";
                     document.getElementById('eco-base-cop-label').innerText = "基準冷房COP (外気25℃以下)";
@@ -2234,17 +2072,11 @@
             async function loadWeatherForCurrentSeason() {
                 const mySeq = ++ecoLoadSeq;
                 activeDataWarning = '';
+                const statusEl = document.getElementById('eco-data-status');
 
-                if (customWeatherBySeason[season]) {
-                    const cw = customWeatherBySeason[season];
-                    activeWeather = cw.data;
-                    activeDataLabel = cw.label;
-                    activeCityName = cw.cityName;
-                    activeCityLat = cw.lat;
-                    activeDataIsSample = false;
-                    activeDataWarning = cw.warning || '';
-                } else if (season === 'winter') {
-                    document.getElementById('eco-data-status').innerText = `読込中... (${CITY_LABELS[selectedCity] || selectedCity} / ${selectedYear}年冬)`;
+                if (season === 'winter') {
+                    statusEl.innerText = `読込中... (${CITY_LABELS[selectedCity] || selectedCity} / ${selectedYear}年冬)`;
+                    statusEl.className = "text-xs text-blue-700 font-medium mt-1.5";
                     try {
                         const parsed = await WeatherStore.loadDataset('winter', selectedCity, selectedYear);
                         if (mySeq !== ecoLoadSeq) return false;
@@ -2255,43 +2087,42 @@
                         activeCityLat = parsed.lat;
                         activeCityName = parsed.cityName;
                         activeDataIsSample = false;
-                        document.getElementById('eco-snow-is-depth').checked = false;
                     } catch (err) {
                         if (mySeq !== ecoLoadSeq) return false;
                         activeDataLabel = `⚠️ 読込エラー: ${err.message}`;
-                        activeDataWarning = "ローカルで直接開いている場合はGitHub PagesまたはLive Server経由で開くか、下のCSV読み込みをご利用ください。";
-                        document.getElementById('eco-data-status').innerText = activeDataLabel;
+                        activeDataWarning = "ローカルで直接開いている場合はGitHub PagesまたはLive Server経由で開いてください。";
+                        statusEl.innerText = activeDataLabel;
+                        statusEl.className = "text-xs text-red-600 font-bold mt-1.5";
                         const wEl = document.getElementById('eco-data-warn');
                         wEl.innerText = activeDataWarning;
                         wEl.classList.remove('hidden');
                         return false;
                     }
                 } else {
-                    // 夏期：manifest.json に該当都市の実測JSONがあれば読込、未収録・エラー・手動指定時は代表モデルへフォールバック
+                    // 夏期：manifest.json に該当都市の実測JSONがあれば読込、未収録・エラー時のみ代表モデルへフォールバック
                     let loadedRealSummer = false;
-                    if (!forceSummerSample) {
-                        document.getElementById('eco-data-status').innerText = `読込中... (${CITY_LABELS[selectedCity] || selectedCity} / ${selectedYear}年夏)`;
-                        try {
-                            const hasReal = await WeatherStore.hasCityInSeason('summer', selectedCity);
+                    statusEl.innerText = `読込中... (${CITY_LABELS[selectedCity] || selectedCity} / ${selectedYear}年夏)`;
+                    statusEl.className = "text-xs text-blue-700 font-medium mt-1.5";
+                    try {
+                        const hasReal = await WeatherStore.hasCityInSeason('summer', selectedCity);
+                        if (mySeq !== ecoLoadSeq) return false;
+                        if (hasReal) {
+                            const parsed = await WeatherStore.loadDataset('summer', selectedCity, selectedYear);
                             if (mySeq !== ecoLoadSeq) return false;
-                            if (hasReal) {
-                                const parsed = await WeatherStore.loadDataset('summer', selectedCity, selectedYear);
-                                if (mySeq !== ecoLoadSeq) return false;
-                                selectedCity = parsed.cityKey;
-                                selectedYear = parsed.yearKey;
-                                activeWeather = parsed.data;
-                                activeDataLabel = parsed.label;
-                                activeCityLat = parsed.lat;
-                                activeCityName = parsed.cityName;
-                                activeDataIsSample = false;
-                                loadedRealSummer = true;
-                            } else {
-                                activeDataWarning = `※${CITY_LABELS[selectedCity] || selectedCity}の夏期実測JSONは未収録のため、内蔵の釧路夏期代表モデルを表示しています（釧路を選ぶと実測JSONを使用できます）。`;
-                            }
-                        } catch (err) {
-                            if (mySeq !== ecoLoadSeq) return false;
-                            activeDataWarning = `※夏期実測JSONの取得に失敗したため、内蔵の釧路夏期代表モデルへフォールバックしました (${err.message})。`;
+                            selectedCity = parsed.cityKey;
+                            selectedYear = parsed.yearKey;
+                            activeWeather = parsed.data;
+                            activeDataLabel = parsed.label;
+                            activeCityLat = parsed.lat;
+                            activeCityName = parsed.cityName;
+                            activeDataIsSample = false;
+                            loadedRealSummer = true;
+                        } else {
+                            activeDataWarning = `※${CITY_LABELS[selectedCity] || selectedCity}の夏期実測JSONは未収録のため、内蔵の釧路夏期代表モデルを表示しています。`;
                         }
+                    } catch (err) {
+                        if (mySeq !== ecoLoadSeq) return false;
+                        activeDataWarning = `※夏期実測JSONの取得に失敗したため、内蔵の釧路夏期代表モデルへフォールバックしました (${err.message})。`;
                     }
 
                     if (!loadedRealSummer) {
@@ -2305,14 +2136,12 @@
                 }
 
                 // ステータス表示更新
-                document.getElementById('eco-data-status').innerText = `現在: ${activeDataLabel}`;
+                statusEl.innerText = `現在: ${activeDataLabel}`;
+                statusEl.className = "text-xs text-emerald-700 font-medium mt-1.5";
                 const badgeEl = document.getElementById('eco-data-badge');
                 if (activeDataIsSample) {
                     badgeEl.innerText = "夏期代表モデル";
                     badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800";
-                } else if (customWeatherBySeason[season]) {
-                    badgeEl.innerText = "CSV実測読込";
-                    badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800";
                 } else {
                     badgeEl.innerText = "内蔵実測データ";
                     badgeEl.className = "text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
@@ -2331,36 +2160,6 @@
                 const weekSlider = document.getElementById('eco-week-start');
                 weekSlider.max = String(maxDays);
                 if (parseInt(weekSlider.value, 10) > maxDays) weekSlider.value = "0";
-
-                const clearCsvBtn = document.getElementById('eco-btn-clear-csv');
-                if (clearCsvBtn) {
-                    if (customWeatherBySeason[season]) {
-                        clearCsvBtn.classList.remove('hidden');
-                    } else {
-                        clearCsvBtn.classList.add('hidden');
-                    }
-                }
-
-                const summerToggleBtn = document.getElementById('eco-btn-summer-builtin');
-                if (summerToggleBtn && season === 'summer') {
-                    const mf = WeatherStore.getManifestSync();
-                    const hasRealForSelected = !!(mf && mf.summer && mf.summer.files && mf.summer.files[selectedCity]);
-                    if (forceSummerSample) {
-                        if (hasRealForSelected) {
-                            summerToggleBtn.innerText = `📡 内蔵実測データ (${CITY_LABELS[selectedCity] || selectedCity} ${selectedYear}年夏) に戻す`;
-                            summerToggleBtn.className = "w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300";
-                        } else {
-                            summerToggleBtn.innerText = `☀️ 内蔵 釧路夏期代表モデルを表示中（釧路選択で実測切替可）`;
-                            summerToggleBtn.className = "w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-amber-100 text-amber-900 border-amber-300";
-                        }
-                    } else if (activeDataIsSample) {
-                        summerToggleBtn.innerText = `☀️ 内蔵 釧路夏期代表モデルを表示中（釧路選択で実測切替可）`;
-                        summerToggleBtn.className = "w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-amber-100 text-amber-900 border-amber-300";
-                    } else {
-                        summerToggleBtn.innerText = `☀️ 内蔵 釧路夏期代表モデル (サンプル) に切替`;
-                        summerToggleBtn.className = "w-full py-1.5 px-3 rounded-lg text-xs font-bold border transition bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-300";
-                    }
-                }
 
                 updateDatasetSelectors();
                 return true;
@@ -3198,156 +2997,8 @@
                 }
             }
 
-            // 経済シミュレーション用 CSV 読み込み（DF02 / JA01 準拠＋列自動検出＋列ズレ警告）
-            function handleEcoCsvUpload(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const buffer = evt.target.result;
-                    let text = "";
-                    try {
-                        text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
-                    } catch (_) {
-                        text = new TextDecoder('shift_jis').decode(buffer);
-                    }
-                    text = text.replace(/^\uFEFF/, '');
-                    const lines = text.split(/\r?\n/);
-
-                    let tempCol = 1;
-                    let snowCol = (season === 'winter') ? 4 : -1;
-                    let sunCol  = (season === 'winter') ? 9 : 4;
-                    let radCol  = (season === 'winter') ? 12 : 9;
-                    let detectedSnowIsDepth = (season === 'winter');
-
-                    for (let i = 0; i < Math.min(10, lines.length); i++) {
-                        if (lines[i].includes('気温') && (lines[i].includes('日照') || lines[i].includes('日射') || lines[i].includes('積雪') || lines[i].includes('降雪') || lines[i].includes('湿度'))) {
-                            const hCols = lines[i].split(',');
-                            const sub1 = (i + 1 < lines.length) ? lines[i + 1].split(',') : [];
-                            const sub2 = (i + 2 < lines.length) ? lines[i + 2].split(',') : [];
-                            tempCol = -1; snowCol = -1; sunCol = -1; radCol = -1;
-                            detectedSnowIsDepth = false;
-                            for (let c = 1; c < hCols.length; c++) {
-                                const hName = hCols[c].trim();
-                                const sName = ((sub1[c] || '') + ' ' + (sub2[c] || '')).trim();
-                                if (sName.includes('品質') || sName.includes('均質') || sName.includes('現象')) continue;
-                                if (hName.includes('気温') && tempCol < 0) { tempCol = c; }
-                                else if ((hName.includes('積雪') || hName.includes('降雪')) && snowCol < 0) {
-                                    snowCol = c;
-                                    detectedSnowIsDepth = hName.includes('積雪');
-                                }
-                                else if (hName.includes('日照') && sunCol < 0) { sunCol = c; }
-                                else if (hName.includes('日射') && radCol < 0) { radCol = c; }
-                            }
-                            break;
-                        }
-                    }
-
-                    const raw = [];
-                    let converted24h = 0;
-                    for (let i = 0; i < lines.length; i++) {
-                        const cols = lines[i].split(',');
-                        if (cols.length < 2) continue;
-                        const { dt, is24h } = parseJmaDateTimeUTC(cols[0]);
-                        if (!dt) continue;
-                        if (is24h) converted24h++;
-
-                        const temp = (tempCol >= 0 && cols.length > tempCol) ? parseJmaNumberCommon(cols[tempCol]) : NaN;
-                        const snow = (snowCol >= 0 && cols.length > snowCol) ? parseJmaNumberCommon(cols[snowCol]) : NaN;
-                        const sun  = (sunCol >= 0 && cols.length > sunCol) ? parseJmaNumberCommon(cols[sunCol]) : NaN;
-                        const rad  = (radCol >= 0 && cols.length > radCol) ? parseJmaNumberCommon(cols[radCol]) : NaN;
-
-                        raw.push({
-                            datetime: dt,
-                            temp: temp,
-                            snow: Number.isFinite(snow) ? Math.max(0.0, snow) : 0.0,
-                            sunshine: Number.isFinite(sun) ? Math.max(0.0, sun) : 0.0,
-                            solar_rad: Number.isFinite(rad) ? Math.max(0.0, rad) : NaN,
-                            solar_rad_is_missing: !Number.isFinite(rad)
-                        });
-                    }
-
-                    if (raw.length === 0) {
-                        alert(`エラー: ${file.name} から有効な気象データを読み取れませんでした。`);
-                        return;
-                    }
-
-                    raw.sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
-                    const dedup = [];
-                    let lastMs = -1;
-                    for (let i = 0; i < raw.length; i++) {
-                        const ms = raw[i].datetime.getTime();
-                        if (ms === lastMs) continue;
-                        lastMs = ms;
-                        dedup.push(raw[i]);
-                    }
-                    let lastValidTemp = NaN;
-                    for (let i = 0; i < dedup.length; i++) {
-                        if (Number.isFinite(dedup[i].temp)) lastValidTemp = dedup[i].temp;
-                        else if (Number.isFinite(lastValidTemp)) dedup[i].temp = lastValidTemp;
-                    }
-                    let nextValidTemp = 0.0;
-                    for (let i = dedup.length - 1; i >= 0; i--) {
-                        if (Number.isFinite(dedup[i].temp)) nextValidTemp = dedup[i].temp;
-                        else dedup[i].temp = nextValidTemp;
-                    }
-
-                    const targetMonths = (season === 'winter') ? [11, 0, 1] : [5, 6, 7];
-                    let filtered = dedup.filter(r => targetMonths.includes(r.datetime.getUTCMonth()));
-                    let warn = '';
-                    if (filtered.length === 0) {
-                        filtered = dedup;
-                        warn = `⚠️ ${season === 'winter' ? '冬期(12-2月)' : '夏期(6-8月)'}の行が見つからなかったため全期間(${dedup.length}時間)を使用します。`;
-                    } else {
-                        const seasonBuckets = new Map();
-                        for (const r of filtered) {
-                            const m = r.datetime.getUTCMonth();
-                            const y = r.datetime.getUTCFullYear();
-                            const sKey = (season === 'winter') ? (m === 11 ? y : y - 1) : y;
-                            if (!seasonBuckets.has(sKey)) seasonBuckets.set(sKey, []);
-                            seasonBuckets.get(sKey).push(r);
-                        }
-                        if (seasonBuckets.size > 1) {
-                            const sortedYears = Array.from(seasonBuckets.keys()).sort((a, b) => a - b);
-                            const latestYear = sortedYears[sortedYears.length - 1];
-                            filtered = seasonBuckets.get(latestYear);
-                            warn = `ℹ️ 複数年(${seasonBuckets.size}シーズン)のCSVを検出したため、最新の ${latestYear}年${season === 'winter' ? '冬' : '夏'} (${filtered.length}時間) を抽出しました。`;
-                        }
-                        if (season === 'summer') {
-                            let sunMax = 0, radMax = 0, snowMax = 0;
-                            for (const r of filtered) {
-                                if (r.sunshine > sunMax) sunMax = r.sunshine;
-                                if (Number.isFinite(r.solar_rad) && r.solar_rad > radMax) radMax = r.solar_rad;
-                                if (r.snow > snowMax) snowMax = r.snow;
-                            }
-                            if (sunMax > 1.05 || radMax > 5.0 || snowMax > 0.0) {
-                                const colWarn = `⚠️ 列チェック警告: 日照最大${sunMax.toFixed(2)}h / 日射最大${radMax.toFixed(2)}MJ/m² / 積雪最大${snowMax.toFixed(2)}（CSV列順をご確認ください）`;
-                                warn = warn ? `${warn} / ${colWarn}` : colWarn;
-                            }
-                        }
-                    }
-
-                    if (season === 'winter') {
-                        document.getElementById('eco-snow-is-depth').checked = detectedSnowIsDepth;
-                    }
-
-                    forceSummerSample = false;
-                    customWeatherBySeason[season] = {
-                        label: `${file.name} (${filtered.length}時間 / 24:00変換:${converted24h}件)`,
-                        cityName: file.name.replace(/\.csv$/i, ''),
-                        lat: 42.985,
-                        data: filtered,
-                        warning: warn
-                    };
-                    loadWeatherForCurrentSeason().then(ok => { if (ok) runEconomySimulation(); });
-                };
-                reader.readAsArrayBuffer(file);
-            }
-
             async function setSeason(newSeason) {
                 season = (newSeason === 'summer') ? 'summer' : 'winter';
-                forceSummerSample = false;
-                document.getElementById('eco-csv-input').value = '';
                 updateSeasonThemeUI();
                 applySeasonDefaultsToUI(season);
                 const ok = await loadWeatherForCurrentSeason();
@@ -3360,31 +3011,14 @@
 
                 document.getElementById('eco-city-select').addEventListener('change', async (e) => {
                     selectedCity = e.target.value;
-                    forceSummerSample = false;
-                    customWeatherBySeason[season] = null;
-                    document.getElementById('eco-csv-input').value = '';
                     const ok = await loadWeatherForCurrentSeason();
                     if (ok) runEconomySimulation();
                 });
                 document.getElementById('eco-year-select').addEventListener('change', async (e) => {
                     selectedYear = e.target.value;
-                    forceSummerSample = false;
-                    customWeatherBySeason[season] = null;
-                    document.getElementById('eco-csv-input').value = '';
                     const ok = await loadWeatherForCurrentSeason();
                     if (ok) runEconomySimulation();
                 });
-
-                document.getElementById('eco-btn-clear-csv').addEventListener('click', async () => {
-                    customWeatherBySeason[season] = null;
-                    forceSummerSample = false;
-                    document.getElementById('eco-csv-input').value = '';
-                    const ok = await loadWeatherForCurrentSeason();
-                    if (ok) runEconomySimulation();
-                });
-
-                document.getElementById('eco-csv-input').addEventListener('change', handleEcoCsvUpload);
-                document.getElementById('eco-snow-is-depth').addEventListener('change', runEconomySimulation);
 
                 let simRafId = null;
                 function scheduleEconomySim() {
