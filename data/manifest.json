@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24 14:46",
+  "generatedAt": "2026-11-24 18:17",
   "cities": [
     {
       "id": "kushiro",
@@ -59,8 +59,80 @@
     }
   ],
   "winter": {
-    "years": [],
-    "files": {}
+    "years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022",
+      "2021",
+      "2020"
+    ],
+    "files": {
+      "kushiro": {
+        "2020": { "path": "data/winter/kushiro_2020.json" },
+        "2021": { "path": "data/winter/kushiro_2021.json" },
+        "2022": { "path": "data/winter/kushiro_2022.json" },
+        "2023": { "path": "data/winter/kushiro_2023.json" },
+        "2024": { "path": "data/winter/kushiro_2024.json" },
+        "2025": { "path": "data/winter/kushiro_2025.json" }
+      },
+      "sapporo": {
+        "2020": { "path": "data/winter/sapporo_2020.json" },
+        "2021": { "path": "data/winter/sapporo_2021.json" },
+        "2022": { "path": "data/winter/sapporo_2022.json" },
+        "2023": { "path": "data/winter/sapporo_2023.json" },
+        "2024": { "path": "data/winter/sapporo_2024.json" },
+        "2025": { "path": "data/winter/sapporo_2025.json" }
+      },
+      "asahikawa": {
+        "2020": { "path": "data/winter/asahikawa_2020.json" },
+        "2021": { "path": "data/winter/asahikawa_2021.json" },
+        "2022": { "path": "data/winter/asahikawa_2022.json" },
+        "2023": { "path": "data/winter/asahikawa_2023.json" },
+        "2024": { "path": "data/winter/asahikawa_2024.json" },
+        "2025": { "path": "data/winter/asahikawa_2025.json" }
+      },
+      "obihiro": {
+        "2020": { "path": "data/winter/obihiro_2020.json" },
+        "2021": { "path": "data/winter/obihiro_2021.json" },
+        "2022": { "path": "data/winter/obihiro_2022.json" },
+        "2023": { "path": "data/winter/obihiro_2023.json" },
+        "2024": { "path": "data/winter/obihiro_2024.json" },
+        "2025": { "path": "data/winter/obihiro_2025.json" }
+      },
+      "wakkanai": {
+        "2020": { "path": "data/winter/wakkanai_2020.json" },
+        "2021": { "path": "data/winter/wakkanai_2021.json" },
+        "2022": { "path": "data/winter/wakkanai_2022.json" },
+        "2023": { "path": "data/winter/wakkanai_2023.json" },
+        "2024": { "path": "data/winter/wakkanai_2024.json" },
+        "2025": { "path": "data/winter/wakkanai_2025.json" }
+      },
+      "abashiri": {
+        "2020": { "path": "data/winter/abashiri_2020.json" },
+        "2021": { "path": "data/winter/abashiri_2021.json" },
+        "2022": { "path": "data/winter/abashiri_2022.json" },
+        "2023": { "path": "data/winter/abashiri_2023.json" },
+        "2024": { "path": "data/winter/abashiri_2024.json" },
+        "2025": { "path": "data/winter/abashiri_2025.json" }
+      },
+      "tomakomai": {
+        "2020": { "path": "data/winter/tomakomai_2020.json" },
+        "2021": { "path": "data/winter/tomakomai_2021.json" },
+        "2022": { "path": "data/winter/tomakomai_2022.json" },
+        "2023": { "path": "data/winter/tomakomai_2023.json" },
+        "2024": { "path": "data/winter/tomakomai_2024.json" },
+        "2025": { "path": "data/winter/tomakomai_2025.json" }
+      },
+      "hakodate": {
+        "2020": { "path": "data/winter/hakodate_2020.json" },
+        "2021": { "path": "data/winter/hakodate_2021.json" },
+        "2022": { "path": "data/winter/hakodate_2022.json" },
+        "2023": { "path": "data/winter/hakodate_2023.json" },
+        "2024": { "path": "data/winter/hakodate_2024.json" },
+        "2025": { "path": "data/winter/hakodate_2025.json" }
+      }
+    }
   },
   "summer": {
     "years": [
