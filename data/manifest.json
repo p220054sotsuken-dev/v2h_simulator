@@ -1,0 +1,553 @@
+{
+  "generatedAt": "2026-11-24 14:46",
+  "cities": [
+    {
+      "id": "kushiro",
+      "name": "釧路",
+      "lat": 42.985,
+      "lon": 144.377,
+      "desc": "太平洋側・少雪多照"
+    },
+    {
+      "id": "sapporo",
+      "name": "札幌",
+      "lat": 43.06,
+      "lon": 141.328,
+      "desc": "日本海側・豪雪都市"
+    },
+    {
+      "id": "asahikawa",
+      "name": "旭川",
+      "lat": 43.757,
+      "lon": 142.372,
+      "desc": "内陸盆地・極寒＆多雪"
+    },
+    {
+      "id": "obihiro",
+      "name": "帯広",
+      "lat": 42.922,
+      "lon": 143.212,
+      "desc": "十勝内陸・極寒＆高晴天率"
+    },
+    {
+      "id": "wakkanai",
+      "name": "稚内",
+      "lat": 45.415,
+      "lon": 141.678,
+      "desc": "道北最北端・低太陽高度"
+    },
+    {
+      "id": "abashiri",
+      "name": "網走",
+      "lat": 44.018,
+      "lon": 144.278,
+      "desc": "オホーツク海側・流氷寒冷"
+    },
+    {
+      "id": "tomakomai",
+      "name": "苫小牧",
+      "lat": 42.623,
+      "lon": 141.547,
+      "desc": "太平洋側・少雪＆温暖"
+    },
+    {
+      "id": "hakodate",
+      "name": "函館",
+      "lat": 41.817,
+      "lon": 140.753,
+      "desc": "道南・温暖＆高太陽高度"
+    }
+  ],
+  "winter": {
+    "years": [],
+    "files": {}
+  },
+  "summer": {
+    "years": [
+      "2025",
+      "2024",
+      "2023",
+      "2022",
+      "2021",
+      "2020"
+    ],
+    "files": {
+      "sapporo": {
+        "2020": {
+          "path": "data/summer/sapporo_2020.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.0,
+          "minTemp": 11.1,
+          "maxTemp": 33.3,
+          "totalSnow": 0,
+          "avgRh": 75.3
+        },
+        "2021": {
+          "path": "data/summer/sapporo_2021.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.9,
+          "minTemp": 8.9,
+          "maxTemp": 34.8,
+          "totalSnow": 0,
+          "avgRh": 72.6
+        },
+        "2022": {
+          "path": "data/summer/sapporo_2022.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.9,
+          "minTemp": 8.1,
+          "maxTemp": 31.6,
+          "totalSnow": 0,
+          "avgRh": 76.8
+        },
+        "2023": {
+          "path": "data/summer/sapporo_2023.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 23.3,
+          "minTemp": 8.8,
+          "maxTemp": 36.0,
+          "totalSnow": 0,
+          "avgRh": 75.9
+        },
+        "2024": {
+          "path": "data/summer/sapporo_2024.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 22.3,
+          "minTemp": 10.7,
+          "maxTemp": 34.2,
+          "totalSnow": 0,
+          "avgRh": 77.4
+        },
+        "2025": {
+          "path": "data/summer/sapporo_2025.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 23.7,
+          "minTemp": 11.9,
+          "maxTemp": 35.7,
+          "totalSnow": 0,
+          "avgRh": 73.9
+        }
+      },
+      "asahikawa": {
+        "2020": {
+          "path": "data/summer/asahikawa_2020.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.3,
+          "minTemp": 8.7,
+          "maxTemp": 33.1,
+          "totalSnow": 0,
+          "avgRh": 78.4
+        },
+        "2021": {
+          "path": "data/summer/asahikawa_2021.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.7,
+          "minTemp": 2.7,
+          "maxTemp": 37.2,
+          "totalSnow": 0,
+          "avgRh": 70.4
+        },
+        "2022": {
+          "path": "data/summer/asahikawa_2022.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.3,
+          "minTemp": 5.0,
+          "maxTemp": 31.5,
+          "totalSnow": 0,
+          "avgRh": 77.7
+        },
+        "2023": {
+          "path": "data/summer/asahikawa_2023.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 22.2,
+          "minTemp": 5.1,
+          "maxTemp": 34.9,
+          "totalSnow": 0,
+          "avgRh": 77.3
+        },
+        "2024": {
+          "path": "data/summer/asahikawa_2024.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.7,
+          "minTemp": 8.6,
+          "maxTemp": 34.4,
+          "totalSnow": 0,
+          "avgRh": 77.8
+        },
+        "2025": {
+          "path": "data/summer/asahikawa_2025.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 22.8,
+          "minTemp": 6.4,
+          "maxTemp": 34.6,
+          "totalSnow": 0,
+          "avgRh": 76.7
+        }
+      },
+      "obihiro": {
+        "2020": {
+          "path": "data/summer/obihiro_2020.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 19.3,
+          "minTemp": 10.3,
+          "maxTemp": 34.0,
+          "totalSnow": 0,
+          "avgRh": 81.5
+        },
+        "2021": {
+          "path": "data/summer/obihiro_2021.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 19.6,
+          "minTemp": 5.7,
+          "maxTemp": 36.8,
+          "totalSnow": 0,
+          "avgRh": 81.0
+        },
+        "2022": {
+          "path": "data/summer/obihiro_2022.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 19.2,
+          "minTemp": 6.9,
+          "maxTemp": 33.1,
+          "totalSnow": 0,
+          "avgRh": 84.7
+        },
+        "2023": {
+          "path": "data/summer/obihiro_2023.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.5,
+          "minTemp": 6.1,
+          "maxTemp": 35.1,
+          "totalSnow": 0,
+          "avgRh": 80.1
+        },
+        "2024": {
+          "path": "data/summer/obihiro_2024.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.0,
+          "minTemp": 3.4,
+          "maxTemp": 34.3,
+          "totalSnow": 0,
+          "avgRh": 80.8
+        },
+        "2025": {
+          "path": "data/summer/obihiro_2025.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 22.4,
+          "minTemp": 5.3,
+          "maxTemp": 37.7,
+          "totalSnow": 0,
+          "avgRh": 77.2
+        }
+      },
+      "wakkanai": {
+        "2020": {
+          "path": "data/summer/wakkanai_2020.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 17.1,
+          "minTemp": 9.6,
+          "maxTemp": 26.1,
+          "totalSnow": 0,
+          "avgRh": 86.8
+        },
+        "2021": {
+          "path": "data/summer/wakkanai_2021.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 18.4,
+          "minTemp": 5.1,
+          "maxTemp": 31.1,
+          "totalSnow": 0,
+          "avgRh": 84.5
+        },
+        "2022": {
+          "path": "data/summer/wakkanai_2022.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 17.4,
+          "minTemp": 4.6,
+          "maxTemp": 26.4,
+          "totalSnow": 0,
+          "avgRh": 86.6
+        },
+        "2023": {
+          "path": "data/summer/wakkanai_2023.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 19.0,
+          "minTemp": 7.0,
+          "maxTemp": 30.8,
+          "totalSnow": 0,
+          "avgRh": 88.2
+        },
+        "2024": {
+          "path": "data/summer/wakkanai_2024.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 17.7,
+          "minTemp": 6.7,
+          "maxTemp": 27.7,
+          "totalSnow": 0,
+          "avgRh": 89.0
+        },
+        "2025": {
+          "path": "data/summer/wakkanai_2025.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.2,
+          "minTemp": 5.8,
+          "maxTemp": 27.9,
+          "totalSnow": 0,
+          "avgRh": 85.4
+        }
+      },
+      "abashiri": {
+        "2020": {
+          "path": "data/summer/abashiri_2020.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 18.0,
+          "minTemp": 8.6,
+          "maxTemp": 35.9,
+          "totalSnow": 0,
+          "avgRh": 79.9
+        },
+        "2021": {
+          "path": "data/summer/abashiri_2021.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 18.5,
+          "minTemp": 4.4,
+          "maxTemp": 34.4,
+          "totalSnow": 0,
+          "avgRh": 76.7
+        },
+        "2022": {
+          "path": "data/summer/abashiri_2022.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 17.4,
+          "minTemp": 4.6,
+          "maxTemp": 32.2,
+          "totalSnow": 0,
+          "avgRh": 83.9
+        },
+        "2023": {
+          "path": "data/summer/abashiri_2023.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 19.9,
+          "minTemp": 6.3,
+          "maxTemp": 36.1,
+          "totalSnow": 0,
+          "avgRh": 81.1
+        },
+        "2024": {
+          "path": "data/summer/abashiri_2024.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 19.1,
+          "minTemp": 5.8,
+          "maxTemp": 33.2,
+          "totalSnow": 0,
+          "avgRh": 81.5
+        },
+        "2025": {
+          "path": "data/summer/abashiri_2025.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 21.3,
+          "minTemp": 5.9,
+          "maxTemp": 34.2,
+          "totalSnow": 0,
+          "avgRh": 78.1
+        }
+      },
+      "tomakomai": {
+        "2020": {
+          "path": "data/summer/tomakomai_2020.json",
+          "hours": 2208,
+          "hasRad": false,
+          "hasRh": true,
+          "avgTemp": 18.6,
+          "minTemp": 9.2,
+          "maxTemp": 30.0,
+          "totalSnow": 0,
+          "avgRh": 88.6
+        },
+        "2021": {
+          "path": "data/summer/tomakomai_2021.json",
+          "hours": 2208,
+          "hasRad": false,
+          "hasRh": true,
+          "avgTemp": 18.9,
+          "minTemp": 7.5,
+          "maxTemp": 32.9,
+          "totalSnow": 0,
+          "avgRh": 87.5
+        },
+        "2022": {
+          "path": "data/summer/tomakomai_2022.json",
+          "hours": 2208,
+          "hasRad": false,
+          "hasRh": true,
+          "avgTemp": 18.9,
+          "minTemp": 6.5,
+          "maxTemp": 33.3,
+          "totalSnow": 0,
+          "avgRh": 86.4
+        },
+        "2023": {
+          "path": "data/summer/tomakomai_2023.json",
+          "hours": 2208,
+          "hasRad": false,
+          "hasRh": true,
+          "avgTemp": 20.7,
+          "minTemp": 5.7,
+          "maxTemp": 31.2,
+          "totalSnow": 0,
+          "avgRh": 87.4
+        },
+        "2024": {
+          "path": "data/summer/tomakomai_2024.json",
+          "hours": 2208,
+          "hasRad": false,
+          "hasRh": true,
+          "avgTemp": 20.6,
+          "minTemp": 5.3,
+          "maxTemp": 31.3,
+          "totalSnow": 0,
+          "avgRh": 86.4
+        },
+        "2025": {
+          "path": "data/summer/tomakomai_2025.json",
+          "hours": 2208,
+          "hasRad": false,
+          "hasRh": true,
+          "avgTemp": 21.1,
+          "minTemp": 9.1,
+          "maxTemp": 32.5,
+          "totalSnow": 0,
+          "avgRh": 86.6
+        }
+      },
+      "hakodate": {
+        "2020": {
+          "path": "data/summer/hakodate_2020.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.5,
+          "minTemp": 10.6,
+          "maxTemp": 32.1,
+          "totalSnow": 0,
+          "avgRh": 81.3
+        },
+        "2021": {
+          "path": "data/summer/hakodate_2021.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.9,
+          "minTemp": 7.8,
+          "maxTemp": 32.8,
+          "totalSnow": 0,
+          "avgRh": 80.6
+        },
+        "2022": {
+          "path": "data/summer/hakodate_2022.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 20.4,
+          "minTemp": 6.5,
+          "maxTemp": 30.4,
+          "totalSnow": 0,
+          "avgRh": 83.2
+        },
+        "2023": {
+          "path": "data/summer/hakodate_2023.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 22.9,
+          "minTemp": 10.4,
+          "maxTemp": 34.5,
+          "totalSnow": 0,
+          "avgRh": 81.1
+        },
+        "2024": {
+          "path": "data/summer/hakodate_2024.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 22.0,
+          "minTemp": 9.3,
+          "maxTemp": 31.9,
+          "totalSnow": 0,
+          "avgRh": 82.5
+        },
+        "2025": {
+          "path": "data/summer/hakodate_2025.json",
+          "hours": 2208,
+          "hasRad": true,
+          "hasRh": true,
+          "avgTemp": 23.0,
+          "minTemp": 9.7,
+          "maxTemp": 32.0,
+          "totalSnow": 0,
+          "avgRh": 79.6
+        }
+      }
+    }
+  }
+}
