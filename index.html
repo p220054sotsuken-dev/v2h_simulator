@@ -1822,7 +1822,7 @@
                         text = new TextDecoder('shift_jis').decode(buffer);
                     }
                     text = text.replace(/^﻿\uFEFF/, '');
-                    const lines = text.split(/?/);
+                    const lines = text.split(/\r?\n/);
                     const parsed = [];
 
                     let tempCol = 1, snowCol = 4, sunCol = 8, radCol = -1;
