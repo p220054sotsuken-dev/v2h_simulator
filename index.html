@@ -1068,7 +1068,7 @@
 
             function calcArrheniusRatio(tempC) {
                 const T_kelvin = Math.max(200.0, tempC + 273.15);
-                return Math.max(0.5, Math.min(1.05, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15))));
+                return Math.min(1.0, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15)));
             }
 
             function updateSelectorButtons() {
@@ -2351,8 +2351,8 @@
                         v2hTripHist[i] = actualV2hTrip;
                     }
 
-                    const T_kelvin = temp + 273.15;
-                    const capRatio = Math.max(0.5, Math.min(1.0, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15))));
+                    const T_kelvin = Math.max(200.0, temp + 273.15);
+                    const capRatio = Math.min(1.0, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15)));
                     const effMaxCap = maxCap * capRatio;
                     const eff = Math.max(0.80, Math.min(0.95, 0.95 * capRatio));
 
