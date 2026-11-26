@@ -238,32 +238,32 @@
             <div class="lg:col-span-1 space-y-5">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
 
-                    <!-- Dataset Selector -->
-                    <div class="mb-5 pb-4 border-b border-slate-200 space-y-3">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-800 mb-2">🗺️ 地域（道内8都市）を選択</label>
-                            <div id="cityBtnGrid" class="grid grid-cols-4 gap-1.5">
-                                <button type="button" data-city="kushiro" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm">釧路</button>
-                                <button type="button" data-city="sapporo" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">札幌</button>
-                                <button type="button" data-city="asahikawa" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">旭川</button>
-                                <button type="button" data-city="obihiro" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">帯広</button>
-                                <button type="button" data-city="wakkanai" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">稚内</button>
-                                <button type="button" data-city="abashiri" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">網走</button>
-                                <button type="button" data-city="tomakomai" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">苫小牧</button>
-                                <button type="button" data-city="hakodate" class="city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">函館</button>
-                            </div>
+                    <!-- Dataset Selector (経済性シミュレータと統一したプルダウン形式) -->
+                    <div class="mb-5 pb-4 border-b border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-bold text-slate-800">📅 気象データソース</label>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">内蔵実測データ</span>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-bold text-slate-800 mb-2">📅 年度（冬期シーズン）を切り替え</label>
-                            <div id="yearBtnGrid" class="grid grid-cols-3 gap-1.5">
-                                <button type="button" data-year="2025" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm">2025年冬</button>
-                                <button type="button" data-year="2024" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2024年冬</button>
-                                <button type="button" data-year="2023" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2023年冬</button>
-                                <button type="button" data-year="2022" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2022年冬</button>
-                                <button type="button" data-year="2021" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2021年冬</button>
-                                <button type="button" data-year="2020" class="year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50">2020年冬</button>
-                            </div>
+                        <div class="grid grid-cols-2 gap-2 mb-2.5">
+                            <select id="surv-city-select" class="text-xs font-bold border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50 text-slate-800">
+                                <option value="kushiro">釧路</option>
+                                <option value="sapporo">札幌</option>
+                                <option value="asahikawa">旭川</option>
+                                <option value="obihiro">帯広</option>
+                                <option value="wakkanai">稚内</option>
+                                <option value="abashiri">網走</option>
+                                <option value="tomakomai">苫小牧</option>
+                                <option value="hakodate">函館</option>
+                            </select>
+                            <select id="surv-year-select" class="text-xs font-bold border border-slate-300 rounded-lg px-2.5 py-2 bg-slate-50 text-slate-800">
+                                <option value="2025">2025年冬 (実測)</option>
+                                <option value="2024">2024年冬 (実測)</option>
+                                <option value="2023">2023年冬 (実測)</option>
+                                <option value="2022">2022年冬 (実測)</option>
+                                <option value="2021">2021年冬 (実測)</option>
+                                <option value="2020">2020年冬 (実測)</option>
+                            </select>
                         </div>
 
                         <div class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 space-y-1">
@@ -277,13 +277,13 @@
                     </div>
 
                     <div class="flex items-center justify-between mb-4 border-b pb-2">
-                        <h2 class="text-base font-bold">シミュレーション条件設定</h2>
+                        <h2 class="text-base font-bold">⚙️ 基本設定</h2>
                         <button id="resetBtn" type="button" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded font-medium transition">
-                            new08_2初期値に戻す
+                            初期値に戻す
                         </button>
                     </div>
 
-                    <!-- Input 1: EV Capacity -->
+                    <!-- Basic Input 1: EV Capacity -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1">
                             <label for="evInput" class="text-sm font-semibold text-slate-700">EVバッテリー容量 (kWh)</label>
@@ -293,7 +293,7 @@
                         <p class="text-xs text-slate-500 mt-1">※参考: 軽EV=20kWh, リーフ=40/60kWh</p>
                     </div>
 
-                    <!-- Input 2: Initial SOC -->
+                    <!-- Basic Input 2: Initial SOC -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1">
                             <label for="socInput" class="text-sm font-semibold text-slate-700">停電発生時の充電残量 (SOC)</label>
@@ -302,27 +302,7 @@
                         <input type="range" id="socInput" min="10" max="100" step="5" value="80" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                     </div>
 
-                    <!-- Input 3: V2H Dead Line -->
-                    <div class="mb-4">
-                        <div class="flex justify-between mb-1">
-                            <label for="limitInput" class="text-sm font-semibold text-slate-700">V2H システム停止下限 (%)</label>
-                            <span id="limitVal" class="text-sm font-bold text-blue-600">10 %</span>
-                        </div>
-                        <input type="range" id="limitInput" min="5" max="30" step="5" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                        <p id="limitNote" class="text-xs text-slate-500 mt-1">※new08_2基準: 10% (4.0kWh)</p>
-                    </div>
-
-                    <!-- Input 4: COP -->
-                    <div class="mb-4">
-                        <div class="flex justify-between mb-1">
-                            <label for="copInput" class="text-sm font-semibold text-slate-700">暖房の成績係数 (COP)</label>
-                            <span id="copVal" class="text-sm font-bold text-blue-600">2.0</span>
-                        </div>
-                        <input type="range" id="copInput" min="1.0" max="4.0" step="0.5" value="2.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                        <p class="text-xs text-slate-500 mt-1">※電気ストーブ=1.0, 寒冷地エアコン=2.0〜</p>
-                    </div>
-
-                    <!-- Input 5: PV Capacity -->
+                    <!-- Basic Input 3: PV Capacity -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1">
                             <label for="pvInput" class="text-sm font-semibold text-slate-700">太陽光パネル容量 (kW)</label>
@@ -331,17 +311,17 @@
                         <input type="range" id="pvInput" min="0" max="10" step="0.5" value="5.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                     </div>
 
-                    <!-- Input 6: Ventilation Rate -->
+                    <!-- Basic Input 4: Target Room Temp -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1">
-                            <label for="ventInput" class="text-sm font-semibold text-slate-700">換気回数 (回/h)</label>
-                            <span id="ventVal" class="text-sm font-bold text-blue-600">0.20 回/h</span>
+                            <label for="targetTempInput" class="text-sm font-semibold text-slate-700">暖房の目標室温 (℃)</label>
+                            <span id="targetTempVal" class="text-sm font-bold text-blue-600">12.0 ℃</span>
                         </div>
-                        <input type="range" id="ventInput" min="0.1" max="0.6" step="0.05" value="0.20" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
-                        <p class="text-xs text-slate-500 mt-1">※new08_2基準: 0.2回 (停電時隙間風) / 通常換気: 0.5回</p>
+                        <input type="range" id="targetTempInput" min="10" max="20" step="1" value="12" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-slate-500 mt-1">※12℃=防寒生存基準 / 18℃=WHO健康維持基準</p>
                     </div>
 
-                    <!-- Start Date Selector -->
+                    <!-- Basic Input 5: Start Date Selector -->
                     <div class="mb-4 pt-3 border-t border-slate-200">
                         <label for="startDaySelect" class="block text-xs font-bold text-slate-700 mb-1">⚡ 停電発生日（シミュレーション開始日時）</label>
                         <select id="startDaySelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
@@ -354,35 +334,73 @@
                         </select>
                     </div>
 
-                    <!-- Passive Solar Gain Selector -->
-                    <div class="mb-4">
-                        <label for="passiveSolarSelect" class="block text-xs font-bold text-slate-700 mb-1">🪟 窓からの日射熱取得（パッシブソーラー）</label>
-                        <select id="passiveSolarSelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
-                            <option value="0.35">標準：南向きLow-E窓（実効日射面積 0.35㎡）</option>
-                            <option value="0.60">大開口：日射取得重視（実効日射面積 0.60㎡）</option>
-                            <option value="0.00">なし：カーテン・断熱雨戸閉鎖（0.00㎡）</option>
-                        </select>
-                    </div>
+                    <!-- Advanced Settings Accordion -->
+                    <details class="mt-4 pt-3 border-t border-slate-200 group">
+                        <summary class="flex items-center justify-between cursor-pointer list-none text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 transition select-none">
+                            <span>🔧 詳細な物理設定を開く（COP・換気・停止下限など）</span>
+                            <span class="text-slate-400 transition-transform duration-200 group-open:rotate-180">▼</span>
+                        </summary>
+                        <div class="mt-4 space-y-4 px-1">
+                            <!-- V2H Dead Line -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label for="limitInput" class="text-xs font-semibold text-slate-700">V2H システム停止下限 (%)</label>
+                                    <span id="limitVal" class="text-xs font-bold text-blue-600">10 %</span>
+                                </div>
+                                <input type="range" id="limitInput" min="5" max="30" step="5" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                                <p id="limitNote" class="text-[11px] text-slate-500 mt-1">※基準: 10% (4.0kWh)</p>
+                            </div>
 
-                    <!-- Plot Range Selector -->
-                    <div class="mb-4 pt-3 border-t border-slate-200">
-                        <label for="plotRangeSelect" class="block text-xs font-bold text-slate-700 mb-1">📈 グラフ描画期間</label>
-                        <select id="plotRangeSelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
-                            <option value="auto">Python版準拠（限界到達+48h / 最大30日間）</option>
-                            <option value="full">全期間を表示（開始日〜2月末日）</option>
-                        </select>
-                    </div>
+                            <!-- COP -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label for="copInput" class="text-xs font-semibold text-slate-700">暖房の成績係数 (COP・外気7℃定格)</label>
+                                    <span id="copVal" class="text-xs font-bold text-blue-600">2.0</span>
+                                </div>
+                                <input type="range" id="copInput" min="1.0" max="4.0" step="0.5" value="2.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-[11px] text-slate-500 mt-1">※電気ストーブ=1.0, 寒冷地エアコン=2.0〜</p>
+                            </div>
 
-                    <div class="bg-blue-50 rounded-lg p-4 mt-4 border border-blue-100">
-                        <p class="text-xs text-blue-800 leading-relaxed">
-                            <strong>固定物理パラメータ (現実物理補正版):</strong><br>
-                            ・対象部屋: LDK 13㎡ (外皮45㎡ + 非暖房室境界 24W/K)<br>
-                            ・室温維持目標: 12.0℃ (初期室温 20.0℃)<br>
-                            ・熱容量 C_th: 0.397 kWh/K / 実効待機電力: 0.18 kW<br>
-                            ・パネル傾斜角: 40° / 窓パッシブ日射熱取得 連成対応<br>
-                            ・低温特性: アレニウス式 (6000 J/mol) + 外気温連動COP<br><span id="survivalCoordSpec">・適用座標: 北緯42.99° / 東経144.38° (釧路)</span>
-                        </p>
-                    </div>
+                            <!-- Ventilation Rate -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label for="ventInput" class="text-xs font-semibold text-slate-700">換気回数 (回/h)</label>
+                                    <span id="ventVal" class="text-xs font-bold text-blue-600">0.20 回/h</span>
+                                </div>
+                                <input type="range" id="ventInput" min="0.1" max="0.6" step="0.05" value="0.20" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-[11px] text-slate-500 mt-1">※基準: 0.2回 (停電時隙間風) / 通常換気: 0.5回</p>
+                            </div>
+
+                            <!-- Passive Solar Gain Selector -->
+                            <div>
+                                <label for="passiveSolarSelect" class="block text-xs font-bold text-slate-700 mb-1">🪟 窓からの日射熱取得（パッシブソーラー）</label>
+                                <select id="passiveSolarSelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
+                                    <option value="0.35">標準：南向きLow-E窓（実効日射面積 0.35㎡）</option>
+                                    <option value="0.60">大開口：日射取得重視（実効日射面積 0.60㎡）</option>
+                                    <option value="0.00">なし：カーテン・断熱雨戸閉鎖（0.00㎡）</option>
+                                </select>
+                            </div>
+
+                            <!-- Plot Range Selector -->
+                            <div>
+                                <label for="plotRangeSelect" class="block text-xs font-bold text-slate-700 mb-1">📈 グラフ描画期間</label>
+                                <select id="plotRangeSelect" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 text-slate-700 font-medium">
+                                    <option value="auto">Python版準拠（限界到達+48h / 最大30日間）</option>
+                                    <option value="full">全期間を表示（開始日〜2月末日）</option>
+                                </select>
+                            </div>
+
+                            <div class="bg-blue-50 rounded-lg p-3.5 border border-blue-100">
+                                <p class="text-[11px] text-blue-800 leading-relaxed">
+                                    <strong>固定物理パラメータ (現実物理補正版):</strong><br>
+                                    ・対象部屋: LDK 13㎡ (外皮45㎡ + 非暖房室境界 24W/K)<br>
+                                    ・初期室温: 20.0℃ / 熱容量 C_th: 0.397 kWh/K<br>
+                                    ・実効待機電力: 0.18 kW / パネル傾斜角: 40°<br>
+                                    ・低温特性: アレニウス式 (6000 J/mol) + 外気温連動COP<br><span id="survivalCoordSpec">・適用座標: 北緯42.99° / 東経144.38° (釧路)</span>
+                                </p>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
 
@@ -1091,18 +1109,10 @@
             }
 
             function updateSelectorButtons() {
-                document.querySelectorAll('#cityBtnGrid .city-btn').forEach(btn => {
-                    const active = btn.dataset.city === currentCityKey;
-                    btn.className = active
-                        ? "city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "city-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
-                });
-                document.querySelectorAll('#yearBtnGrid .year-btn').forEach(btn => {
-                    const active = btn.dataset.year === currentYearKey;
-                    btn.className = active
-                        ? "year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "year-btn py-1.5 px-2 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
-                });
+                const cSel = document.getElementById('surv-city-select');
+                const ySel = document.getElementById('surv-year-select');
+                if (cSel) cSel.value = currentCityKey;
+                if (ySel) ySel.value = currentYearKey;
             }
 
             async function loadBuiltInDataset(cityKey, yearKey) {
@@ -1154,7 +1164,8 @@
             function evaluateSurvivalCore(wData, meta, params, needHistory) {
                 const {
                     battery_capacity_max, init_soc, dead_line_kWh,
-                    COP, pv_capacity, vent_rate, start_day_offset, passive_solar_factor
+                    COP, pv_capacity, vent_rate, start_day_offset, passive_solar_factor,
+                    target_temp
                 } = params;
 
                 const N_full = wData.length;
@@ -1252,8 +1263,7 @@
                 let is_battery_dead = (current_battery <= dead_line_kWh + 1e-9);
                 let is_game_over = false;
 
-                const target_temp = 12.0;
-                const vent_threshold_temp = 15.0;
+                const vent_threshold_temp = target_temp + 3.0;
                 const transmission_loss = 0.46 * 45.0 + 24.0;
                 const ventilation_loss = 31.2 * vent_rate * 0.33;
                 const H_tr = (transmission_loss + ventilation_loss) / 1000.0;
@@ -1526,6 +1536,7 @@
                 const limit_ratio = parseFloat(limitEl.value) / 100.0;
                 const COP = parseFloat(document.getElementById('copInput').value);
                 const pv_capacity = parseFloat(document.getElementById('pvInput').value);
+                const target_temp = parseFloat(document.getElementById('targetTempInput').value);
                 const vent_rate = parseFloat(document.getElementById('ventInput').value);
                 const start_day_offset = parseInt(document.getElementById('startDaySelect').value, 10) || 0;
                 const passive_solar_factor = parseFloat(document.getElementById('passiveSolarSelect').value);
@@ -1539,11 +1550,13 @@
                 document.getElementById('limitNote').innerText = `※new08_2基準: 10% (現在の下限: ${dead_line_kWh.toFixed(1)} kWh)`;
                 document.getElementById('copVal').innerText = COP.toFixed(1);
                 document.getElementById('pvVal').innerText = `${pv_capacity.toFixed(1)} kW`;
+                document.getElementById('targetTempVal').innerText = `${target_temp.toFixed(1)} ℃`;
                 document.getElementById('ventVal').innerText = `${vent_rate.toFixed(2)} 回/h`;
 
                 const params = {
                     battery_capacity_max, init_soc, dead_line_kWh,
-                    COP, pv_capacity, vent_rate, start_day_offset, passive_solar_factor
+                    COP, pv_capacity, vent_rate, start_day_offset, passive_solar_factor,
+                    target_temp
                 };
 
                 const res = evaluateSurvivalCore(weatherData, currentMeta, params, true);
@@ -1722,14 +1735,14 @@
             function init() {
                 const batchBtn = document.getElementById('runBatchCompareBtn');
                 if (batchBtn) batchBtn.addEventListener('click', triggerBatchComparison);
-                document.querySelectorAll('#cityBtnGrid .city-btn').forEach(btn => {
-                    btn.addEventListener('click', () => loadBuiltInDataset(btn.dataset.city, currentYearKey));
+                document.getElementById('surv-city-select').addEventListener('change', (e) => {
+                    loadBuiltInDataset(e.target.value, currentYearKey);
                 });
-                document.querySelectorAll('#yearBtnGrid .year-btn').forEach(btn => {
-                    btn.addEventListener('click', () => loadBuiltInDataset(currentCityKey, btn.dataset.year));
+                document.getElementById('surv-year-select').addEventListener('change', (e) => {
+                    loadBuiltInDataset(currentCityKey, e.target.value);
                 });
 
-                ['evInput', 'socInput', 'limitInput', 'copInput', 'pvInput', 'ventInput'].forEach(id => {
+                ['evInput', 'socInput', 'limitInput', 'copInput', 'pvInput', 'targetTempInput', 'ventInput'].forEach(id => {
                     document.getElementById(id).addEventListener('input', runSimulation);
                 });
                 document.getElementById('startDaySelect').addEventListener('change', runSimulation);
@@ -1742,6 +1755,7 @@
                     document.getElementById('limitInput').value = 10;
                     document.getElementById('copInput').value = 2.0;
                     document.getElementById('pvInput').value = 5.0;
+                    document.getElementById('targetTempInput').value = 12;
                     document.getElementById('ventInput').value = 0.20;
                     document.getElementById('startDaySelect').value = "0";
                     document.getElementById('passiveSolarSelect').value = "0.35";
