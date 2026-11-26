@@ -635,6 +635,25 @@
                             </label>
                             <input type="checkbox" id="eco-use-breakeven" checked class="w-4 h-4 rounded text-blue-600 cursor-pointer">
                         </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                            <div>
+                                <label for="eco-household-select" class="block text-xs font-semibold text-slate-700 mb-1">👨‍👩‍👧‍👦 世帯構成（生活電力）</label>
+                                <select id="eco-household-select" class="w-full text-xs font-bold border border-slate-300 rounded-lg px-2 py-1.5 bg-slate-50 text-slate-800">
+                                    <option value="family4">4人世帯 (標準 ×1.00)</option>
+                                    <option value="couple2">2人世帯 (×0.85)</option>
+                                    <option value="single1">単身世帯 (×0.60)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="eco-ev-schedule-select" class="block text-xs font-semibold text-slate-700 mb-1">🚗 平日EV在宅パターン</label>
+                                <select id="eco-ev-schedule-select" class="w-full text-xs font-bold border border-slate-300 rounded-lg px-2 py-1.5 bg-slate-50 text-slate-800">
+                                    <option value="commute">通勤 (8-18時不在 / 10kWh)</option>
+                                    <option value="short_out">短時間外出 (10-15時不在 / 6kWh)</option>
+                                    <option value="wfh">在宅ワーク (終日在宅 / 0kWh)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Group 3: Building / HVAC (Season Dependent) -->
@@ -1260,7 +1279,7 @@
 
                     const capacity_ratio = calcArrheniusRatio(temp_out);
                     const effective_max_capacity = battery_capacity_max * capacity_ratio;
-                    const eff = Math.max(0.5, Math.min(0.95, 0.95 * capacity_ratio));
+                    const eff = 0.95 * (0.85 + 0.15 * capacity_ratio);
 
                     const COP_eff = (COP > 1.05)
                         ? Math.max(1.0, COP * Math.max(0.45, Math.min(1.15, 1.0 + 0.022 * (temp_out - 7.0))))
@@ -1817,6 +1836,16 @@
 
             const WEEKDAY_LIFESTYLE = [0.3,0.3,0.3,0.3,0.3,0.3, 1.5,1.2, 0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4, 0.8,1.2,2.0,1.5,1.0,0.7,0.4];
             const WEEKEND_LIFESTYLE = [0.3,0.3,0.3,0.3,0.3,0.3,0.3, 1.2,1.5,1.0,0.8,0.6,0.8,0.8,0.6,0.8,1.2,1.8,2.2,1.6,1.2,0.8,0.5,0.3];
+            const HOUSEHOLD_PROFILES = {
+                family4: { label: '4人世帯', scale: 1.00 },
+                couple2: { label: '2人世帯', scale: 0.85 },
+                single1: { label: '単身世帯', scale: 0.60 }
+            };
+            const EV_WEEKDAY_SCHEDULES = {
+                commute:   { label: '平日外出8-18時(10kWh)', depH: 8,  retH: 18, tripKWh: 10.0 },
+                short_out: { label: '平日外出10-15時(6kWh)', depH: 10, retH: 15, tripKWh: 6.0  },
+                wfh:       { label: '平日終日在宅(0kWh)',    depH: -1, retH: -1, tripKWh: 0.0  }
+            };
             const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
 
             const CITY_LABELS = {
@@ -1876,6 +1905,8 @@
                 document.getElementById('eco-use-breakeven').checked = d.use_breakeven_control;
                 document.getElementById('eco-target-temp').value = d.target_temp;
                 document.getElementById('eco-base-cop').value = d.base_cop;
+                document.getElementById('eco-household-select').value = 'family4';
+                document.getElementById('eco-ev-schedule-select').value = 'commute';
                 document.getElementById('eco-week-start').value = 0;
             }
 
@@ -1909,6 +1940,14 @@
                 base.snow_col_is_depth = false;
                 base.lat_deg = activeCityLat;
                 base.lon_deg = activeCityLon;
+                base.household_key = document.getElementById('eco-household-select').value || 'family4';
+                base.ev_schedule_key = document.getElementById('eco-ev-schedule-select').value || 'commute';
+                const hhProf = HOUSEHOLD_PROFILES[base.household_key] || HOUSEHOLD_PROFILES.family4;
+                const evSched = EV_WEEKDAY_SCHEDULES[base.ev_schedule_key] || EV_WEEKDAY_SCHEDULES.commute;
+                base.lifestyle_scale = hhProf.scale;
+                base.ev_wkday_depH = evSched.depH;
+                base.ev_wkday_retH = evSched.retH;
+                base.ev_wkday_trip = evSched.tripKWh;
 
                 document.getElementById('eco-pv-cap-val').innerText = `${base.pv_capacity_kW.toFixed(1)} kW`;
                 document.getElementById('eco-batt-max-val').innerText = `${base.battery_max_kWh.toFixed(0)} kWh`;
@@ -1926,7 +1965,7 @@
                 if (specsEl) {
                     const hvacCap = (season === 'winter') ? `暖房最大${base.max_hvac_kW}kW` : `冷房最大${base.max_hvac_kW}kW`;
                     specsEl.innerHTML =
-                        `<strong>固定物理仕様 (サバイバル共通物理コア):</strong> UA=${base.u_value} / 外皮${base.envelope_area}㎡ / 気積${base.air_volume}㎥ / 換気${base.ach}回/h / C_th=${base.c_th.toFixed(1)} kWh/K (連続指数積分) / ${hvacCap} / 初期SOC=${base.initial_soc_kWh.toFixed(1)}kWh / 充放電最大${base.max_charge_kW}kW / V2H待機${base.v2h_standby_kW}kW / 北緯${base.lat_deg.toFixed(2)}°・東経${base.lon_deg.toFixed(2)}° (均時差・4サブステップ日射) / 平日外出8-18時(10kWh)・休日11-15時(6kWh)`;
+                        `<strong>固定物理仕様 (サバイバル共通物理コア):</strong> UA=${base.u_value} / 外皮${base.envelope_area}㎡ / 気積${base.air_volume}㎥ / 換気${base.ach}回/h / C_th=${base.c_th.toFixed(1)} kWh/K (連続指数積分) / ${hvacCap} / 初期SOC=${base.initial_soc_kWh.toFixed(1)}kWh / 充放電最大${base.max_charge_kW}kW / V2H待機${base.v2h_standby_kW}kW / 北緯${base.lat_deg.toFixed(2)}°・東経${base.lon_deg.toFixed(2)}° / 世帯:${hhProf.label}(×${hhProf.scale.toFixed(2)}) / ${evSched.label}・休日11-15時(6kWh)`;
                 }
                 return base;
             }
@@ -2235,7 +2274,7 @@
                 let T_in = isWinter ? targetT : Math.max(20.0, Math.min(targetT, tempArr[0]));
 
                 for (let i = 0; i < n; i++) {
-                    const life = isWeekend[i] ? WEEKEND_LIFESTYLE[hourArr[i]] : WEEKDAY_LIFESTYLE[hourArr[i]];
+                    const life = (isWeekend[i] ? WEEKEND_LIFESTYLE[hourArr[i]] : WEEKDAY_LIFESTYLE[hourArr[i]]) * cfg.lifestyle_scale;
                     lifestyleArr[i] = life;
 
                     if (isGap[i]) {
@@ -2324,12 +2363,12 @@
                     const buyP = buyPrices[i];
                     const sellP = sellPrices[i];
 
-                    const depH = wk ? 11 : 8;
-                    const retH = wk ? 15 : 18;
-                    const tripKWh = wk ? 6.0 : 10.0;
-                    const isEvHome = !(hour >= depH && hour < retH);
+                    const depH = wk ? 11 : cfg.ev_wkday_depH;
+                    const retH = wk ? 15 : cfg.ev_wkday_retH;
+                    const tripKWh = wk ? 6.0 : cfg.ev_wkday_trip;
+                    const isEvHome = (depH < 0) ? true : !(hour >= depH && hour < retH);
 
-                    if (hour === depH) {
+                    if (depH >= 0 && hour === depH && tripKWh > 0.0) {
                         const actualBaseTrip = Math.min(baseBatt, tripKWh);
                         if (actualBaseTrip < tripKWh - 1e-9) {
                             baseShortCnt++;
@@ -2354,7 +2393,7 @@
                     const T_kelvin = Math.max(200.0, temp + 273.15);
                     const capRatio = Math.min(1.0, Math.exp(-(6000.0 / 8.314) * (1.0 / T_kelvin - 1.0 / 298.15)));
                     const effMaxCap = maxCap * capRatio;
-                    const eff = Math.max(0.80, Math.min(0.95, 0.95 * capRatio));
+                    const eff = 0.95 * (0.85 + 0.15 * capRatio);
 
                     const breakevenNight = cfg.price_night / (eff * eff);
                     const breakevenPv = cfg.sell_price_fixed / (eff * eff);
@@ -3006,6 +3045,8 @@
                     document.getElementById(id).addEventListener('input', scheduleEconomySim);
                 });
                 document.getElementById('eco-use-breakeven').addEventListener('change', runEconomySimulation);
+                document.getElementById('eco-household-select').addEventListener('change', runEconomySimulation);
+                document.getElementById('eco-ev-schedule-select').addEventListener('change', runEconomySimulation);
 
                 document.getElementById('eco-reset-btn').addEventListener('click', () => {
                     applySeasonDefaultsToUI(season);
